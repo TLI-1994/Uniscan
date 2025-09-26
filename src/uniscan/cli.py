@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable, Sequence
@@ -25,6 +26,7 @@ class CliOptions:
     skip_binaries: bool = False
     verbosity: str = DEFAULT_VERBOSITY
     semgrep: str = "auto"
+    progress: bool = True
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -73,7 +75,7 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Skip native binary detection",
     )
-    parser.set_defaults(include_binaries=False, skip_binaries=False)
+    parser.set_defaults(include_binaries=None, skip_binaries=False)
 
     parser.add_argument(
         "--verbosity",
@@ -88,6 +90,20 @@ def build_parser() -> argparse.ArgumentParser:
         default="auto",
         help="Select analysis engine (default: auto)",
     )
+
+    parser.add_argument(
+        "--progress",
+        dest="progress",
+        action="store_true",
+        help="Show a live progress indicator during scanning",
+    )
+    parser.add_argument(
+        "--no-progress",
+        dest="progress",
+        action="store_false",
+        help="Disable the progress indicator",
+    )
+    parser.set_defaults(progress=True)
 
     parser.add_argument(
         "--quiet",
@@ -111,7 +127,8 @@ def parse_args(argv: Sequence[str]) -> CliOptions:
     parser = build_parser()
     namespace = parser.parse_args(list(argv))
 
-    include_binaries = bool(namespace.include_binaries)
+    include_binaries_flag = namespace.include_binaries
+    include_binaries = True if include_binaries_flag is None else bool(include_binaries_flag)
     skip_binaries = namespace.skip_binaries
     if skip_binaries:
         include_binaries = False
@@ -131,6 +148,7 @@ def parse_args(argv: Sequence[str]) -> CliOptions:
         skip_binaries=skip_binaries,
         verbosity=namespace.verbosity,
         semgrep=namespace.engine,
+        progress=namespace.progress,
     )
 
     return options

@@ -30,6 +30,7 @@ def test_run_scan_respects_engine_flag(unity_project, monkeypatch, flag, expecte
         skip_binaries=True,
         verbosity="normal",
         semgrep=flag,
+        progress=True,
     )
 
     monkeypatch.setenv("UNISCAN_DISABLE_SEMGREP", "1")

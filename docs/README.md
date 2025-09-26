@@ -51,6 +51,7 @@ Common flags:
 * `--skip-binaries` / `--include-binaries` – control native binary detection
 * `--verbosity {quiet|normal|debug}` – adjust the amount of detail printed (aliases `--quiet` and `--debug`)
 * `--engine {auto|semgrep|heuristic}` – force Semgrep, always use the lightweight heuristic scanner, or let Uniscan decide automatically
+* `--progress` / `--no-progress` – toggle the live progress indicator (enabled by default)
 
 Each run reports which analysis engine was used (`semgrep` when available, otherwise a heuristic fallback) so you can confirm full rule coverage.
 

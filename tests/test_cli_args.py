@@ -19,6 +19,7 @@ def test_parser_defines_expected_arguments():
         "skip_binaries",
         "verbosity",
         "engine",
+        "progress",
     }:
         assert expected in options
 
@@ -42,10 +43,11 @@ def test_parse_args_returns_cli_options():
     assert args.target == Path("/tmp/project")
     assert args.format == "json"
     assert args.no_colors is True
-    assert args.include_binaries is False
+    assert args.include_binaries is True
     assert args.skip_binaries is False
     assert args.verbosity == "normal"
     assert args.semgrep == "auto"
+    assert args.progress is True
 
 
 def test_parser_rejects_invalid_format():
@@ -64,3 +66,14 @@ def test_shorthand_verbosity_flags(flag):
 def test_engine_flag_can_select_semgrep():
     args = parse_args(["/tmp", "--engine", "semgrep"])
     assert args.semgrep == "semgrep"
+
+
+def test_progress_flag_enables_progress():
+    args = parse_args(["/tmp", "--progress"])
+    assert args.progress is True
+
+
+def test_skip_binaries_flag_disables_inclusion():
+    args = parse_args(["/tmp", "--skip-binaries"])
+    assert args.include_binaries is False
+    assert args.skip_binaries is True

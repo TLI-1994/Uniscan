@@ -3,18 +3,26 @@ from __future__ import annotations
 import json
 import sys
 from pathlib import Path
-from typing import Any
+from typing import Any, Sequence
 
 from .binaries import BinaryClassifier
 from .cli import CliOptions, parse_args
 from .rules import RuleLoadError, load_ruleset
-from .scanner import ScanReport, Scanner, ScannerConfig
+from .scanner import Finding, ScanReport, Scanner, ScannerConfig
 
 EXIT_OK = 0
 EXIT_USAGE = 2
 EXIT_FS_ERROR = 3
 EXIT_RULE_ERROR = 4
 EXIT_FAILURE = 1
+
+_RESET = "\x1b[0m"
+_COLORS = {
+    "info": "\x1b[34m",  # blue
+    "warning": "\x1b[33m",  # yellow
+    "error": "\x1b[31m",  # red
+    "critical": "\x1b[35m",  # magenta
+}
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -60,6 +68,7 @@ def run_scan(options: CliOptions) -> ScanReport:
         include_binaries=should_include_binaries,
         skip_binaries=options.skip_binaries,
         use_semgrep=_map_engine_choice(options.semgrep),
+        show_progress=options.progress,
     )
 
     scanner = Scanner(ruleset=ruleset, binary_classifier=classifier, config=config)
@@ -112,6 +121,7 @@ def _report_to_text(report: ScanReport, options: CliOptions) -> str:
         lines.append(f"Analysis engine: {engine_name} (fallback: {fallback_str})")
     else:
         lines.append(f"Analysis engine: {engine_name}")
+
     counts = report.summary.get("findings", {})
     lines.append(
         "Findings: total={total} info={info} warning={warning} error={error}".format(
@@ -124,11 +134,37 @@ def _report_to_text(report: ScanReport, options: CliOptions) -> str:
     if report.summary.get("binaries"):
         lines.append(f"Native binaries detected: {report.summary['binaries']}")
 
-    for finding in report.findings:
-        location = f"{finding.path}:{finding.line}" if finding.line else str(finding.path)
-        lines.append(f"[{finding.rule_id}] {finding.severity.upper()} - {finding.message} ({location})")
+    lines.extend(_format_findings_text(report.findings, options))
 
     return "\n".join(lines)
+
+
+def _format_findings_text(findings: Sequence[Finding], options: CliOptions) -> list[str]:
+    if options.verbosity == "quiet":
+        return []
+
+    colorize = not options.no_colors
+    lines: list[str] = []
+    for finding in findings:
+        rule_display = finding.rule_id
+        severity = finding.severity.upper()
+        location = f"{finding.path}:{finding.line}" if finding.line else str(finding.path)
+        snippet = f" \u2014 {finding.snippet}" if options.verbosity == "debug" and finding.snippet else ""
+
+        severity_text = severity
+        if colorize:
+            color = _severity_color(finding.severity)
+            if color:
+                rule_display = f"{color}{rule_display}{_RESET}"
+                severity_text = f"{color}{severity}{_RESET}"
+
+        lines.append(f"[{rule_display}] {severity_text} - {finding.message} ({location}){snippet}")
+
+    return lines
+
+
+def _severity_color(severity: str) -> str | None:
+    return _COLORS.get(severity.lower())
 
 
 def _print_error(message: str) -> None:

@@ -3,6 +3,9 @@ from __future__ import annotations
 
 import os
 import re
+import sys
+import threading
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable, Iterator, List, Sequence
@@ -37,6 +40,7 @@ class ScannerConfig:
     skip_binaries: bool = False
     allowed_dirs: tuple[str, ...] = ("Assets", "Packages", "ProjectSettings")
     use_semgrep: bool | None = None  # None = auto detect
+    show_progress: bool = False
 
     def binaries_enabled(self) -> bool:
         if self.skip_binaries:
@@ -79,32 +83,54 @@ class Scanner:
         findings: list[Finding] = []
         binaries: list[BinaryFinding] = []
 
+        total_progress = len(csharp_files)
+        if self.config.binaries_enabled():
+            total_progress += len(other_files)
+        progress = _ProgressPrinter(self.config.show_progress, total_progress)
+
+        semgrep_phase = self._semgrep_runner is not None and csharp_files
+        if semgrep_phase:
+            progress.start_semgrep_timer()
+        else:
+            progress.start()
+
         semgrep_used = False
         semgrep_error: str | None = None
-        if self._semgrep_runner and csharp_files:
+        if semgrep_phase:
             try:
+                progress.start_spinner("Running Semgrep")
                 relative_targets = _relativize_paths(project_root, csharp_files)
                 matches = self._semgrep_runner.run(project_root, relative_targets)
+                progress.stop_spinner()
                 findings.extend(self._convert_semgrep_matches(project_root, matches))
                 semgrep_used = True
+                progress.increment(len(csharp_files))
             except SemgrepUnavailable as exc:
+                progress.stop_spinner()
                 semgrep_error = str(exc) or "semgrep unavailable"
                 if self.config.use_semgrep:
+                    progress.finish()
                     raise
 
         if not semgrep_used:
-            findings.extend(self._heuristic_scan(csharp_files))
+            for path in csharp_files:
+                file_findings = self._scan_csharp(path)
+                findings.extend(file_findings)
+                progress.increment()
 
         if self.config.binaries_enabled():
             for file_path in other_files:
                 binary = self.binary_classifier.classify(file_path)
                 if binary:
                     binaries.append(binary)
+                progress.increment()
 
         summary = _summarize(findings, binaries)
         engine_info: dict[str, object] = {"name": "semgrep" if semgrep_used else "heuristic"}
         if not semgrep_used and semgrep_error:
             engine_info["fallback_reason"] = semgrep_error
+
+        progress.finish()
 
         return ScanReport(
             target=project_root,
@@ -127,12 +153,6 @@ class Scanner:
             if allow and top_level not in allow:
                 continue
             yield path
-
-    def _heuristic_scan(self, files: Sequence[Path]) -> list[Finding]:
-        findings: list[Finding] = []
-        for path in files:
-            findings.extend(self._scan_csharp(path))
-        return findings
 
     def _scan_csharp(self, path: Path) -> list[Finding]:
         try:
@@ -333,6 +353,110 @@ def _relativize_paths(project_root: Path, files: Sequence[Path]) -> list[Path]:
         except ValueError:
             relative.append(path)
     return relative
+
+
+class _ProgressPrinter:
+    _SPINNER = "|/-\\"
+
+    def __init__(self, enabled: bool, total: int) -> None:
+        self.enabled = enabled and total > 0
+        self.total = max(total, 1)
+        self.current = 0
+        self._last = ""
+        self._spinning = False
+        self._spin_index = 0
+        self._spin_label = ""
+        self._spinner_thread: threading.Thread | None = None
+        self._show_semgrep_time = False
+        self._start_time: float | None = None
+
+    def start(self) -> None:
+        if not self.enabled:
+            return
+        self._write(self._progress_line())
+
+    def start_semgrep_timer(self) -> None:
+        if not self.enabled:
+            return
+        self._show_semgrep_time = True
+        self._start_time = time.time()
+        self._write(self._semgrep_line())
+
+    def start_spinner(self, label: str) -> None:
+        if not self.enabled:
+            return
+        if self._spinning:
+            return
+        self._spinning = True
+        self._spin_index = 0
+        self._spin_label = label
+        self._write(self._spinner_line())
+        self._spinner_thread = threading.Thread(target=self._spin_loop, daemon=True)
+        self._spinner_thread.start()
+
+    def stop_spinner(self) -> None:
+        if not self.enabled or not self._spinning:
+            return
+        self._spinning = False
+        if self._spinner_thread:
+            self._spinner_thread.join(timeout=0.2)
+            self._spinner_thread = None
+        if self._show_semgrep_time:
+            self._show_semgrep_time = False
+            self._start_time = None
+        self._write(self._progress_line())
+
+    def increment(self, step: int = 1) -> None:
+        if not self.enabled:
+            return
+        if self._spinning:
+            return
+        if step <= 0:
+            return
+        self.current = min(self.total, self.current + step)
+        self._write(self._progress_line())
+
+    def finish(self) -> None:
+        if not self.enabled:
+            return
+        if self._spinning:
+            self.stop_spinner()
+        self._show_semgrep_time = False
+        self._start_time = None
+        sys.stderr.write("\n")
+        sys.stderr.flush()
+
+    def _progress_line(self) -> str:
+        percent = int(self.current / self.total * 100)
+        return f"Scanning... {self.current}/{self.total} ({percent:3d}%)"
+
+    def _spinner_line(self) -> str:
+        if self._show_semgrep_time and self._start_time:
+            elapsed = time.time() - self._start_time
+            return f"{self._SPINNER[self._spin_index]} {self._spin_label} ({elapsed:.1f}s)"
+        return f"{self._SPINNER[self._spin_index]} {self._spin_label}"
+
+    def _spin_loop(self) -> None:
+        while self._spinning:
+            time.sleep(0.1)
+            self._spin_index = (self._spin_index + 1) % len(self._SPINNER)
+            self._write(self._spinner_line())
+
+    def _write(self, text: str) -> None:
+        if not self.enabled:
+            return
+        if self._show_semgrep_time and not self._spinning and self._start_time:
+            text = self._semgrep_line()
+        padding = max(len(self._last) - len(text), 0)
+        sys.stderr.write("\r" + text + " " * padding)
+        sys.stderr.flush()
+        self._last = text
+
+    def _semgrep_line(self) -> str:
+        if not self._start_time:
+            return "Running Semgrep"
+        elapsed = time.time() - self._start_time
+        return f"Running Semgrep ({elapsed:.1f}s)"
 
 
 def _normalize_semgrep_id(check_id: str) -> str:
