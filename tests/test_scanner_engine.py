@@ -40,3 +40,15 @@ def test_scanner_can_skip_binaries(unity_project):
     assert report.binaries == []
     assert report.summary["binaries"] == 0
     assert report.engine["name"] == "heuristic"
+
+
+def test_scanner_reports_multiple_matches_per_rule(unity_project):
+    scanner = make_scanner()
+    report = scanner.scan(unity_project("multi_match_project"))
+
+    autorun_findings = [
+        finding for finding in report.findings if finding.rule_id == "core.unity.autorun.editor-hooks"
+    ]
+
+    assert len(autorun_findings) == 2
+    assert {finding.line for finding in autorun_findings} == {5, 10}

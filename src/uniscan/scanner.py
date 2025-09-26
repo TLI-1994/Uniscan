@@ -8,7 +8,7 @@ import threading
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable, Iterator, List, Sequence
+from typing import Iterable, Iterator, Sequence
 
 from .binaries import BinaryClassifier, BinaryFinding
 from .rules import Rule, Ruleset
@@ -164,20 +164,17 @@ class Scanner:
         lines = source.splitlines()
 
         for matcher in self._matchers:
-            match_line = matcher.find_match(lines)
-            if match_line is None:
-                continue
-            line_no, snippet = match_line
-            findings.append(
-                Finding(
-                    rule_id=_format_rule_id(matcher.rule),
-                    severity=matcher.rule.severity.lower(),
-                    message=matcher.rule.message,
-                    path=path,
-                    line=line_no,
-                    snippet=snippet,
+            for line_no, snippet in matcher.find_matches(lines):
+                findings.append(
+                    Finding(
+                        rule_id=_format_rule_id(matcher.rule),
+                        severity=matcher.rule.severity.lower(),
+                        message=matcher.rule.message,
+                        path=path,
+                        line=line_no,
+                        snippet=snippet,
+                    )
                 )
-            )
 
         return findings
 
@@ -227,12 +224,14 @@ class _RuleMatcher:
         self.rule = rule
         self.patterns = list(patterns)
 
-    def find_match(self, lines: Sequence[str]) -> tuple[int, str] | None:
+    def find_matches(self, lines: Sequence[str]) -> list[tuple[int, str]]:
+        matches: list[tuple[int, str]] = []
         for idx, line in enumerate(lines, start=1):
             for pattern in self.patterns:
                 if pattern.matches(line):
-                    return idx, line.strip()
-        return None
+                    matches.append((idx, line.strip()))
+                    break
+        return matches
 
 
 class _PatternChecker:
