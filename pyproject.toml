@@ -23,5 +23,15 @@ dependencies = [
 [project.scripts]
 uniscan = "uniscan.main:main"
 
+[project.optional-dependencies]
+test = [
+    "pytest>=7.0",
+]
+
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.pytest.ini_options]
+markers = [
+    "integration: marks tests that invoke CLI end to end",
+]

@@ -28,15 +28,42 @@ Change your current directory to the cloned repository:
 cd Uniscan
 ```
 
-### 3. Run the scanner:
-Run the main Python script, providing the path to the Unity project you want to audit.
+### 3. Run the scanner
+
+Run the CLI against your Unity project. From the repository root you can execute the module directly:
+
 ```bash
-python src/uniscan/main.py /path/to/unity/project
+PYTHONPATH=src python -m uniscan.main /path/to/unity/project
 ```
 
-Or, if installed as a package with an entry point:
+If you install the package into a virtual environment, the console script becomes available:
+
 ```bash
+pip install .
 uniscan /path/to/unity/project
+```
+
+Common flags:
+
+* `--format {text|json}` – choose human-readable or machine-readable output (`text` is default)
+* `--no-colors` – disable ANSI colours in text mode
+* `--ruleset path/to/extra_rules.yaml` – load additional Semgrep-style YAML rules (may be passed multiple times)
+* `--skip-binaries` / `--include-binaries` – control native binary detection
+* `--verbosity {quiet|normal|debug}` – adjust the amount of detail printed (aliases `--quiet` and `--debug`)
+
+Example:
+
+```bash
+uniscan ~/Projects/MyUnityGame --format json --skip-binaries
+```
+
+### 4. Run the test suite (optional)
+
+Install the testing extra and execute pytest:
+
+```bash
+pip install .[test]
+python -m pytest
 ```
 
 ---
