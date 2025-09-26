@@ -29,7 +29,7 @@ def test_scanner_flags_process_start(unity_project):
     report = scanner.scan(unity_project("risky_project"))
 
     rule_ids = {finding.rule_id for finding in report.findings}
-    assert "unity.proc.exec.process-start" in rule_ids
+    assert "core.unity.proc.exec.process-start" in rule_ids
     assert report.engine["name"] == "heuristic"
 
 

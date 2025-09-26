@@ -39,7 +39,7 @@ def test_scanner_records_fallback_reason(monkeypatch, unity_project):
     report = scanner.scan(unity_project("risky_project"))
     assert report.engine["name"] == "heuristic"
     assert message in str(report.engine.get("fallback_reason"))
-    assert any(f.rule_id == "unity.proc.exec.process-start" for f in report.findings)
+    assert any(f.rule_id == "core.unity.proc.exec.process-start" for f in report.findings)
 
 
 def test_semgrep_runner_builds_command(monkeypatch, tmp_path):

@@ -150,7 +150,7 @@ class Scanner:
             line_no, snippet = match_line
             findings.append(
                 Finding(
-                    rule_id=matcher.rule.id,
+                    rule_id=_format_rule_id(matcher.rule),
                     severity=matcher.rule.severity.lower(),
                     message=matcher.rule.message,
                     path=path,
@@ -164,7 +164,7 @@ class Scanner:
     def _convert_semgrep_matches(self, project_root: Path, matches: Sequence[SemgrepMatch]) -> list[Finding]:
         findings: list[Finding] = []
         for match in matches:
-            rule = self._rule_index.get(match.rule_id)
+            rule = self._resolve_rule(match.rule_id)
             message = rule.message if rule else (match.message or match.rule_id)
             severity = (rule.severity if rule else (match.severity or "WARNING")).lower()
             path = match.path
@@ -172,7 +172,7 @@ class Scanner:
                 path = (project_root / path).resolve()
             findings.append(
                 Finding(
-                    rule_id=match.rule_id,
+                    rule_id=_format_rule_id(rule) if rule else _normalize_semgrep_id(match.rule_id),
                     severity=severity,
                     message=message,
                     path=path,
@@ -181,6 +181,18 @@ class Scanner:
                 )
             )
         return findings
+
+    def _resolve_rule(self, check_id: str) -> Rule | None:
+        rule = self._rule_index.get(check_id)
+        if rule:
+            return rule
+        normalized = _normalize_semgrep_id(check_id)
+        if "." in normalized:
+            _, suffix = normalized.split(".", 1)
+            rule = self._rule_index.get(suffix)
+            if rule:
+                return rule
+        return _lookup_rule_by_suffix(self.ruleset.rules, check_id)
 
     def _maybe_init_semgrep_runner(self) -> SemgrepRunner | None:
         if self.config.use_semgrep is False:
@@ -321,3 +333,40 @@ def _relativize_paths(project_root: Path, files: Sequence[Path]) -> list[Path]:
         except ValueError:
             relative.append(path)
     return relative
+
+
+def _normalize_semgrep_id(check_id: str) -> str:
+    for marker in (".core.", ".private."):
+        if marker in check_id:
+            suffix = check_id.split(marker, 1)[1]
+            return marker.strip(".") + "." + suffix
+    return check_id.split(".")[-1]
+
+
+def _lookup_rule_by_suffix(rules: Sequence[Rule], check_id: str) -> Rule | None:
+    for rule in rules:
+        if check_id.endswith(rule.id):
+            return rule
+    return None
+
+
+def _format_rule_id(rule: Rule | None) -> str:
+    if rule is None:
+        return "unknown"
+    prefix = rule.tag
+    if prefix == "external":
+        return rule.id
+    return f"{prefix}.{rule.id}"
+
+
+def _resolve_rule(self, check_id: str) -> Rule | None:
+    rule = self._rule_index.get(check_id)
+    if rule:
+        return rule
+    normalized = _normalize_semgrep_id(check_id)
+    if "." in normalized:
+        _, suffix = normalized.split(".", 1)
+        rule = self._rule_index.get(suffix)
+        if rule:
+            return rule
+    return _lookup_rule_by_suffix(self.ruleset.rules, check_id)

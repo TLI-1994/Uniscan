@@ -23,6 +23,7 @@ class Rule:
     severity: str
     raw: dict
     source: Path
+    tag: str
 
 
 @dataclass(frozen=True)
@@ -112,6 +113,7 @@ def _parse_rule_document(document: object, *, source: Path) -> list[Rule]:
                 severity=severity,
                 raw=entry,
                 source=source,
+                tag=_infer_tag(source),
             )
         )
 
@@ -224,3 +226,12 @@ def _strip_quotes(value: str) -> str:
     ):
         return value[1:-1]
     return value
+
+
+def _infer_tag(source: Path) -> str:
+    parts = source.parts
+    if "core" in parts:
+        return "core"
+    if "private" in parts:
+        return "private"
+    return "external"

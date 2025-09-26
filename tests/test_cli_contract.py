@@ -41,7 +41,7 @@ def test_risky_project_reports_process_start(unity_project):
     rule_ids = {finding["rule_id"] for finding in findings}
 
     assert payload["engine"]["name"] == "heuristic"
-    assert "unity.proc.exec.process-start" in rule_ids
+    assert "core.unity.proc.exec.process-start" in rule_ids
     severity_counts = payload["summary"]["findings"]
     assert severity_counts["error"] >= 1
 
