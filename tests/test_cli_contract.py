@@ -1,4 +1,5 @@
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -8,7 +9,9 @@ import pytest
 
 def run_cli(target: Path, *args: str) -> subprocess.CompletedProcess:
     command = [sys.executable, "-m", "uniscan.main", str(target), *args]
-    return subprocess.run(command, capture_output=True, text=True)
+    env = os.environ.copy()
+    env.setdefault("UNISCAN_DISABLE_SEMGREP", "1")
+    return subprocess.run(command, capture_output=True, text=True, env=env)
 
 
 @pytest.mark.integration
@@ -21,6 +24,7 @@ def test_clean_project_json_output(unity_project):
 
     assert payload["target"].endswith("clean_project")
     assert payload["summary"]["findings"]["total"] == 0
+    assert payload["engine"]["name"] == "heuristic"
     assert payload["findings"] == []
     assert payload["binaries"] == []
 
@@ -36,6 +40,7 @@ def test_risky_project_reports_process_start(unity_project):
     findings = payload["findings"]
     rule_ids = {finding["rule_id"] for finding in findings}
 
+    assert payload["engine"]["name"] == "heuristic"
     assert "unity.proc.exec.process-start" in rule_ids
     severity_counts = payload["summary"]["findings"]
     assert severity_counts["error"] >= 1
@@ -48,6 +53,7 @@ def test_binary_detection_respects_toggle(unity_project):
     with_binaries = run_cli(target, "--format", "json", "--no-colors")
     assert with_binaries.returncode == 0, with_binaries.stderr
     payload = json.loads(with_binaries.stdout)
+    assert payload["engine"]["name"] == "heuristic"
     assert payload["binaries"] != []
     paths = {entry["path"] for entry in payload["binaries"]}
     assert any(path.endswith("native.dll") for path in paths)
@@ -61,6 +67,7 @@ def test_binary_detection_respects_toggle(unity_project):
     )
     assert without_binaries.returncode == 0, without_binaries.stderr
     payload = json.loads(without_binaries.stdout)
+    assert payload["engine"]["name"] == "heuristic"
     assert payload["binaries"] == []
     assert payload["summary"]["binaries"] == 0
 

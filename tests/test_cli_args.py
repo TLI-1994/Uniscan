@@ -18,6 +18,7 @@ def test_parser_defines_expected_arguments():
         "include_binaries",
         "skip_binaries",
         "verbosity",
+        "engine",
     }:
         assert expected in options
 
@@ -44,6 +45,7 @@ def test_parse_args_returns_cli_options():
     assert args.include_binaries is False
     assert args.skip_binaries is False
     assert args.verbosity == "normal"
+    assert args.semgrep == "auto"
 
 
 def test_parser_rejects_invalid_format():
@@ -57,3 +59,8 @@ def test_shorthand_verbosity_flags(flag):
     args = parse_args(["/tmp", flag])
     expected = "quiet" if flag == "--quiet" else "debug"
     assert args.verbosity == expected
+
+
+def test_engine_flag_can_select_semgrep():
+    args = parse_args(["/tmp", "--engine", "semgrep"])
+    assert args.semgrep == "semgrep"

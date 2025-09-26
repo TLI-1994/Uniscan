@@ -24,6 +24,7 @@ class CliOptions:
     include_binaries: bool = True
     skip_binaries: bool = False
     verbosity: str = DEFAULT_VERBOSITY
+    semgrep: str = "auto"
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -82,6 +83,13 @@ def build_parser() -> argparse.ArgumentParser:
     )
 
     parser.add_argument(
+        "--engine",
+        choices=["auto", "semgrep", "heuristic"],
+        default="auto",
+        help="Select analysis engine (default: auto)",
+    )
+
+    parser.add_argument(
         "--quiet",
         action="store_const",
         const="quiet",
@@ -122,6 +130,7 @@ def parse_args(argv: Sequence[str]) -> CliOptions:
         include_binaries=include_binaries,
         skip_binaries=skip_binaries,
         verbosity=namespace.verbosity,
+        semgrep=namespace.engine,
     )
 
     return options

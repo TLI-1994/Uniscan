@@ -50,6 +50,9 @@ Common flags:
 * `--ruleset path/to/extra_rules.yaml` – load additional Semgrep-style YAML rules (may be passed multiple times)
 * `--skip-binaries` / `--include-binaries` – control native binary detection
 * `--verbosity {quiet|normal|debug}` – adjust the amount of detail printed (aliases `--quiet` and `--debug`)
+* `--engine {auto|semgrep|heuristic}` – force Semgrep, always use the lightweight heuristic scanner, or let Uniscan decide automatically
+
+Each run reports which analysis engine was used (`semgrep` when available, otherwise a heuristic fallback) so you can confirm full rule coverage.
 
 Example:
 

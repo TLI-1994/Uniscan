@@ -1,6 +1,7 @@
 """Core scanning engine for Uniscan."""
 from __future__ import annotations
 
+import os
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -8,6 +9,7 @@ from typing import Iterable, Iterator, List, Sequence
 
 from .binaries import BinaryClassifier, BinaryFinding
 from .rules import Rule, Ruleset
+from .semgrep_runner import SemgrepMatch, SemgrepRunner, SemgrepUnavailable
 
 
 @dataclass(frozen=True)
@@ -26,6 +28,7 @@ class ScanReport:
     findings: list[Finding]
     binaries: list[BinaryFinding]
     summary: dict
+    engine: dict[str, object]
 
 
 @dataclass(frozen=True)
@@ -33,6 +36,7 @@ class ScannerConfig:
     include_binaries: bool = True
     skip_binaries: bool = False
     allowed_dirs: tuple[str, ...] = ("Assets", "Packages", "ProjectSettings")
+    use_semgrep: bool | None = None  # None = auto detect
 
     def binaries_enabled(self) -> bool:
         if self.skip_binaries:
@@ -54,6 +58,8 @@ class Scanner:
         self.binary_classifier = binary_classifier
         self.config = config or ScannerConfig()
         self._matchers = _build_matchers(ruleset)
+        self._rule_index = {rule.id: rule for rule in ruleset.rules}
+        self._semgrep_runner = self._maybe_init_semgrep_runner()
 
     def scan(self, target: Path) -> ScanReport:
         project_root = Path(target).resolve()
@@ -62,19 +68,51 @@ class Scanner:
         if not project_root.is_dir():
             raise NotADirectoryError(f"Target {project_root} is not a directory")
 
+        csharp_files: list[Path] = []
+        other_files: list[Path] = []
+        for file_path in self._iter_candidate_files(project_root):
+            if file_path.suffix.lower() == ".cs":
+                csharp_files.append(file_path)
+            else:
+                other_files.append(file_path)
+
         findings: list[Finding] = []
         binaries: list[BinaryFinding] = []
 
-        for file_path in self._iter_candidate_files(project_root):
-            if file_path.suffix.lower() == ".cs":
-                findings.extend(self._scan_csharp(file_path))
-            elif self.config.binaries_enabled():
+        semgrep_used = False
+        semgrep_error: str | None = None
+        if self._semgrep_runner and csharp_files:
+            try:
+                relative_targets = _relativize_paths(project_root, csharp_files)
+                matches = self._semgrep_runner.run(project_root, relative_targets)
+                findings.extend(self._convert_semgrep_matches(project_root, matches))
+                semgrep_used = True
+            except SemgrepUnavailable as exc:
+                semgrep_error = str(exc) or "semgrep unavailable"
+                if self.config.use_semgrep:
+                    raise
+
+        if not semgrep_used:
+            findings.extend(self._heuristic_scan(csharp_files))
+
+        if self.config.binaries_enabled():
+            for file_path in other_files:
                 binary = self.binary_classifier.classify(file_path)
                 if binary:
                     binaries.append(binary)
 
         summary = _summarize(findings, binaries)
-        return ScanReport(target=project_root, findings=findings, binaries=binaries, summary=summary)
+        engine_info: dict[str, object] = {"name": "semgrep" if semgrep_used else "heuristic"}
+        if not semgrep_used and semgrep_error:
+            engine_info["fallback_reason"] = semgrep_error
+
+        return ScanReport(
+            target=project_root,
+            findings=findings,
+            binaries=binaries,
+            summary=summary,
+            engine=engine_info,
+        )
 
     def _iter_candidate_files(self, root: Path) -> Iterator[Path]:
         allow = {name.lower() for name in self.config.allowed_dirs}
@@ -89,6 +127,12 @@ class Scanner:
             if allow and top_level not in allow:
                 continue
             yield path
+
+    def _heuristic_scan(self, files: Sequence[Path]) -> list[Finding]:
+        findings: list[Finding] = []
+        for path in files:
+            findings.extend(self._scan_csharp(path))
+        return findings
 
     def _scan_csharp(self, path: Path) -> list[Finding]:
         try:
@@ -116,6 +160,34 @@ class Scanner:
             )
 
         return findings
+
+    def _convert_semgrep_matches(self, project_root: Path, matches: Sequence[SemgrepMatch]) -> list[Finding]:
+        findings: list[Finding] = []
+        for match in matches:
+            rule = self._rule_index.get(match.rule_id)
+            message = rule.message if rule else (match.message or match.rule_id)
+            severity = (rule.severity if rule else (match.severity or "WARNING")).lower()
+            path = match.path
+            if not path.is_absolute():
+                path = (project_root / path).resolve()
+            findings.append(
+                Finding(
+                    rule_id=match.rule_id,
+                    severity=severity,
+                    message=message,
+                    path=path,
+                    line=match.line,
+                    snippet=match.snippet.strip() if match.snippet else None,
+                )
+            )
+        return findings
+
+    def _maybe_init_semgrep_runner(self) -> SemgrepRunner | None:
+        if self.config.use_semgrep is False:
+            return None
+        if os.environ.get("UNISCAN_DISABLE_SEMGREP"):
+            return None
+        return SemgrepRunner.maybe_create(self.ruleset.sources)
 
 
 class _RuleMatcher:
@@ -239,3 +311,13 @@ def _summarize(findings: Sequence[Finding], binaries: Sequence[BinaryFinding]) -
         "findings": severity_counts,
         "binaries": len(binaries),
     }
+
+
+def _relativize_paths(project_root: Path, files: Sequence[Path]) -> list[Path]:
+    relative: list[Path] = []
+    for path in files:
+        try:
+            relative.append(path.relative_to(project_root))
+        except ValueError:
+            relative.append(path)
+    return relative

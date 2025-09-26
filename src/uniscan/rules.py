@@ -28,6 +28,7 @@ class Rule:
 @dataclass(frozen=True)
 class Ruleset:
     rules: tuple[Rule, ...]
+    sources: tuple[Path, ...]
 
     def for_language(self, language: str) -> list[Rule]:
         language_lower = language.lower()
@@ -65,7 +66,16 @@ def load_ruleset(
         file_rules = _parse_rule_document(data, source=path)
         rules.extend(file_rules)
 
-    return Ruleset(tuple(rules))
+    unique_sources: list[Path] = []
+    seen_sources = set()
+    for path in sources:
+        resolved = path.resolve()
+        if resolved in seen_sources:
+            continue
+        seen_sources.add(resolved)
+        unique_sources.append(resolved)
+
+    return Ruleset(tuple(rules), tuple(unique_sources))
 
 
 def _parse_rule_document(document: object, *, source: Path) -> list[Rule]:

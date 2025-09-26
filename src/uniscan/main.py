@@ -59,16 +59,26 @@ def run_scan(options: CliOptions) -> ScanReport:
     config = ScannerConfig(
         include_binaries=should_include_binaries,
         skip_binaries=options.skip_binaries,
+        use_semgrep=_map_engine_choice(options.semgrep),
     )
 
     scanner = Scanner(ruleset=ruleset, binary_classifier=classifier, config=config)
     return scanner.scan(options.target)
 
 
+def _map_engine_choice(choice: str) -> bool | None:
+    if choice == "semgrep":
+        return True
+    if choice == "heuristic":
+        return False
+    return None
+
+
 def _report_to_json(report: ScanReport, options: CliOptions) -> str:
     payload: dict[str, Any] = {
         "target": str(report.target),
         "summary": report.summary,
+        "engine": report.engine,
         "findings": [
             {
                 "rule_id": finding.rule_id,
@@ -95,6 +105,13 @@ def _report_to_json(report: ScanReport, options: CliOptions) -> str:
 
 def _report_to_text(report: ScanReport, options: CliOptions) -> str:
     lines = [f"Scan target: {report.target}"]
+    engine_name = str(report.engine.get("name", "unknown"))
+    fallback = report.engine.get("fallback_reason")
+    if fallback:
+        fallback_str = str(fallback)
+        lines.append(f"Analysis engine: {engine_name} (fallback: {fallback_str})")
+    else:
+        lines.append(f"Analysis engine: {engine_name}")
     counts = report.summary.get("findings", {})
     lines.append(
         "Findings: total={total} info={info} warning={warning} error={error}".format(
