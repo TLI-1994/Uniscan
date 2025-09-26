@@ -1,0 +1,121 @@
+rules:
+  # Reflection namespace (signal only, not inherently malicious)
+  - id: unity.reflection.using-namespace
+    message: Uses System.Reflection (review in context)
+    languages: [csharp]
+    severity: INFO
+    pattern: using System.Reflection;
+
+  # Editor/runtime autorun hooks
+  - id: unity.autorun.editor-hooks
+    message: Editor/run hooks that auto-execute code
+    languages: [csharp]
+    severity: WARNING
+    pattern-regex: '\[(?:UnityEditor\.)?(?:InitializeOnLoad(?:Method)?|RuntimeInitializeOnLoadMethod|ExecuteAlways|ExecuteInEditMode|DidReloadScripts|PostProcessBuild|PreProcessBuild)\b'
+
+  # Process execution
+  - id: unity.proc.exec.process-start
+    message: External process execution
+    languages: [csharp]
+    severity: ERROR
+    pattern-either:
+      - pattern: System.Diagnostics.Process.Start(...)
+      - pattern: new System.Diagnostics.ProcessStartInfo(...)
+
+  # Filesystem / registry
+  - id: unity.fs.absolute-write
+    message: Writing to absolute path
+    languages: [csharp]
+    severity: WARNING
+    pattern-regex: 'System\.IO\.File\.(?:WriteAllText|WriteAllBytes|AppendAllText|Copy|Move|Delete|OpenWrite)\s*\(\s*"(?:(?:[A-Za-z]:\\)|/)'
+
+  - id: unity.fs.dir-mutate-absolute
+    message: Directory mutate on absolute path
+    languages: [csharp]
+    severity: WARNING
+    pattern-regex: 'System\.IO\.Directory\.(?:CreateDirectory|Delete|Move)\s*\(\s*"(?:(?:[A-Za-z]:\\)|/)'
+
+  - id: unity.registry.access
+    message: Windows Registry access
+    languages: [csharp]
+    severity: WARNING
+    pattern-regex: 'Microsoft\.Win32\.Registry\.'
+
+  # Networking
+  - id: unity.net.literal-url
+    message: Hard-coded URL in source (review origin domain)
+    languages: [csharp]
+    severity: INFO
+    pattern-regex: '"https?://[^"]+"'
+
+  - id: unity.net.insecure-http
+    message: Plain HTTP (insecure) URL used
+    languages: [csharp]
+    severity: WARNING
+    pattern-regex: '"http://[^"]+"'
+
+  - id: unity.net.discord-webhook
+    message: Discord webhook found (common exfil target)
+    languages: [csharp]
+    severity: ERROR
+    pattern-regex: 'https://(?:canary\.|ptb\.)?discord\.com/api/webhooks/'
+
+  # Insecure deserialization
+  - id: unity.deserialize.binaryformatter
+    message: Insecure BinaryFormatter deserialization
+    languages: [csharp]
+    severity: ERROR
+    pattern-either:
+      - pattern: new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter(...)
+      - pattern: new BinaryFormatter(...)
+
+  - id: unity.deserialize.soap-los
+    message: Insecure SOAP/LOS deserialization
+    languages: [csharp]
+    severity: ERROR
+    pattern-either:
+      - pattern: new System.Runtime.Serialization.Formatters.Soap.SoapFormatter(...)
+      - pattern: new System.Web.UI.LosFormatter(...)
+
+  - id: unity.deserialize.json-typenamehandling-all
+    message: Newtonsoft.Json TypeNameHandling.All/Auto enables polymorphic gadget chains
+    languages: [csharp]
+    severity: ERROR
+    pattern-regex: 'TypeNameHandling\s*=\s*TypeNameHandling\.(?:All|Auto)'
+
+  # Crypto misuse
+  - id: unity.crypto.weak-algos
+    message: Weak/legacy crypto (DES/RC2/3DES)
+    languages: [csharp]
+    severity: WARNING
+    pattern-either:
+      - pattern: System.Security.Cryptography.DES.Create(...)
+      - pattern: System.Security.Cryptography.RC2.Create(...)
+      - pattern: System.Security.Cryptography.TripleDES.Create(...)
+
+  - id: unity.crypto.aes-ecb
+    message: AES in ECB mode (insecure)
+    languages: [csharp]
+    severity: ERROR
+    pattern-either:
+      - pattern: new System.Security.Cryptography.AesManaged { Mode = System.Security.Cryptography.CipherMode.ECB, ... }
+      - pattern: $A.Mode = System.Security.Cryptography.CipherMode.ECB
+
+  - id: unity.crypto.random-for-security
+    message: System.Random is not cryptographically secure
+    languages: [csharp]
+    severity: WARNING
+    pattern: new System.Random(...)
+
+  # Unsafe/native interop
+  - id: unity.native.dllimport
+    message: Native code via DllImport
+    languages: [csharp]
+    severity: WARNING
+    pattern-regex: '\[DllImport\('
+
+  - id: unity.native.unsafe
+    message: "Unsafe code block"
+    languages: [csharp]
+    severity: WARNING
+    pattern-regex: '\bunsafe\b'

@@ -1,0 +1,3 @@
+[submodule "rules/private"]
+	path = rules/private
+	url = https://github.com/TLI-1994/Uniscan-rules-advanced.git
