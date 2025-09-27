@@ -43,6 +43,8 @@ pip install .
 uniscan /path/to/unity/project
 ```
 
+The installation pulls in all required dependencies (including Semgrep and PyYAML).
+
 Common flags:
 
 * `--format {text|json}` – choose human-readable or machine-readable output (`text` is default)

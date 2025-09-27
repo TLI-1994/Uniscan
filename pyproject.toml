@@ -18,6 +18,7 @@ classifiers = [
 
 dependencies = [
     "semgrep>=1.72.0",
+    "PyYAML>=6.0",
 ]
 
 [project.scripts]

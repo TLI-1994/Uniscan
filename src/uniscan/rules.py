@@ -5,10 +5,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable, List, Sequence
 
-try:  # pragma: no cover - optional dependency
-    import yaml  # type: ignore
-except ImportError:  # pragma: no cover - optional dependency
-    yaml = None
+import yaml
 
 
 class RuleLoadError(RuntimeError):
@@ -121,111 +118,10 @@ def _parse_rule_document(document: object, *, source: Path) -> list[Rule]:
 
 
 def _load_rule_document(text: str, *, source: Path) -> object:
-    if yaml is not None:
-        try:
-            return yaml.safe_load(text)
-        except Exception as exc:  # pragma: no cover - yaml parsing details not important
-            raise RuleLoadError(f"Failed to load rule file {source}: {exc}") from exc
-    return _fallback_parse_yaml(text, source=source)
-
-
-def _fallback_parse_yaml(text: str, *, source: Path) -> object:
-    rules: list[dict] = []
-    current: dict | None = None
-    active_list_key: str | None = None
-    list_indent: int | None = None
-    saw_rules_key = False
-
-    for raw_line in text.splitlines():
-        stripped_leading = raw_line.lstrip()
-        if not stripped_leading or stripped_leading.startswith("#"):
-            continue
-
-        indent = len(raw_line) - len(stripped_leading)
-        line = stripped_leading
-
-        if active_list_key is not None and list_indent is not None and indent < list_indent:
-            active_list_key = None
-            list_indent = None
-
-        if line.startswith("rules:"):
-            saw_rules_key = True
-            continue
-
-        if line.startswith("- id:"):
-            if current:
-                rules.append(current)
-            current = {
-                "id": _parse_scalar(line[len("- id:"):].strip())
-            }
-            active_list_key = None
-            list_indent = None
-            continue
-
-        if current is None:
-            # Skip preamble until first rule entry
-            continue
-
-        if active_list_key and line.startswith("- "):
-            content = line[2:].strip()
-            if not content:
-                continue
-            if ":" not in content:
-                raise RuleLoadError(f"Invalid list entry in {source}: {content}")
-            key, value = content.split(":", 1)
-            entry = {key.strip(): _parse_scalar(value.strip())}
-            current[active_list_key].append(entry)
-            continue
-
-        if ":" not in line:
-            continue
-
-        key, value = line.split(":", 1)
-        key = key.strip()
-        value = value.strip()
-
-        if not value:
-            if key == "rules":
-                # top-level declaration handled implicitly
-                continue
-            if key == "pattern-either":
-                current[key] = []
-                active_list_key = key
-                list_indent = indent + 2
-            else:
-                current[key] = {}
-            continue
-
-        current[key] = _parse_scalar(value)
-        active_list_key = None
-        list_indent = None
-
-    if current:
-        rules.append(current)
-
-    if not saw_rules_key:
-        raise RuleLoadError(f"Rule file {source} missing top-level 'rules' key")
-
-    return {"rules": rules}
-
-
-def _parse_scalar(token: str):
-    token = token.strip()
-    if token.startswith("[") and token.endswith("]"):
-        inner = token[1:-1].strip()
-        if not inner:
-            return []
-        parts = [part.strip() for part in inner.split(",")]
-        return [_strip_quotes(part) for part in parts]
-    return _strip_quotes(token)
-
-
-def _strip_quotes(value: str) -> str:
-    if (value.startswith("'") and value.endswith("'")) or (
-        value.startswith('"') and value.endswith('"')
-    ):
-        return value[1:-1]
-    return value
+    try:
+        return yaml.safe_load(text)
+    except Exception as exc:  # pragma: no cover - yaml parsing details not important
+        raise RuleLoadError(f"Failed to load rule file {source}: {exc}") from exc
 
 
 def _infer_tag(source: Path) -> str:
