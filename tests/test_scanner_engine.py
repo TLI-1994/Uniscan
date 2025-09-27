@@ -11,7 +11,7 @@ def make_scanner(include_binaries: bool = True) -> Scanner:
         skip_binaries=not include_binaries,
         use_semgrep=False,
     )
-    return Scanner(ruleset=ruleset, binary_classifier=classifier, config=config)
+    return Scanner(ruleset=ruleset, semgrep_sources=(), binary_classifier=classifier, config=config)
 
 
 def test_scanner_reports_no_findings_for_clean_project(unity_project):

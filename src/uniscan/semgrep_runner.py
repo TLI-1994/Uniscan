@@ -5,6 +5,8 @@ import json
 import os
 import shutil
 import subprocess
+
+import certifi
 from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Sequence
@@ -28,16 +30,21 @@ class SemgrepMatch:
 class SemgrepRunner:
     """Thin wrapper around the Semgrep CLI."""
 
-    def __init__(self, binary: str, rule_files: Sequence[Path]) -> None:
+    def __init__(self, binary: str, rule_files: Sequence[Path], jobs: int | None = None) -> None:
         self.binary = binary
         self.rule_files = [Path(path) for path in rule_files]
+        self.jobs = jobs
 
     @classmethod
-    def maybe_create(cls, rule_files: Sequence[Path]) -> SemgrepRunner | None:
+    def maybe_create(
+        cls,
+        rule_files: Sequence[Path],
+        jobs: int | None = None,
+    ) -> SemgrepRunner | None:
         binary = _resolve_semgrep_binary()
         if binary is None:
             return None
-        return cls(binary, rule_files)
+        return cls(binary, rule_files, jobs=jobs)
 
     def run(self, project_root: Path, targets: Sequence[Path]) -> list[SemgrepMatch]:
         if not targets:
@@ -48,14 +55,20 @@ class SemgrepRunner:
             "--json",
             "--quiet",
             "--disable-version-check",
+            "--metrics", "off",
         ]
         for rule_path in self.rule_files:
             command.extend(["--config", str(rule_path)])
+        jobs = self._effective_jobs(len(targets))
+        if jobs and jobs > 1:
+            command.extend(["--jobs", str(jobs)])
         command.extend(str(target) for target in targets)
 
         env = os.environ.copy()
         env.setdefault("SEMGREP_SKIP_UPDATE_CHECK", "1")
         env.setdefault("SEMGREP_SEND_METRICS", "off")
+        env.setdefault("SSL_CERT_FILE", certifi.where())
+        env.setdefault("SEMGREP_LOG_FILE", "/dev/null")
 
         try:
             proc = subprocess.run(
@@ -109,6 +122,12 @@ class SemgrepRunner:
             )
 
         return matches
+
+
+    def _effective_jobs(self, target_count: int) -> int | None:
+        if not self.jobs or target_count <= 1:
+            return None
+        return max(1, min(self.jobs, target_count))
 
 
 def _resolve_semgrep_binary() -> str | None:

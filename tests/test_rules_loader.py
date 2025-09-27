@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from uniscan.rules import Ruleset, RuleLoadError, load_ruleset
+from uniscan.rules import Ruleset, RuleLoadError, load_ruleset, load_semgrep_sources
 
 
 def test_load_ruleset_includes_core_rules():
@@ -56,3 +56,10 @@ def test_ruleset_filters_by_language():
 
     nonexistent = ruleset.for_language("python")
     assert nonexistent == []
+
+
+def test_semgrep_sources_include_core_rules():
+    sources = load_semgrep_sources(include_private=False)
+    assert sources, "Expected at least one semgrep rule source"
+    for path in sources:
+        assert path.exists()

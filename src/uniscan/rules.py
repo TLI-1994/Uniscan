@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable, List, Sequence
+from typing import Iterable, List, Sequence, Tuple
 
 import yaml
 
@@ -44,12 +44,20 @@ def load_ruleset(
     rules_root = module_root.parent.parent / "rules"
     sources: List[Path] = []
 
-    core_dir = rules_root / "core"
+    core_dir = rules_root / "core" / "heuristic"
+    if not core_dir.exists():
+        core_dir = rules_root / "core"
     sources.extend(sorted(core_dir.glob("*.yaml")))
 
     if include_private:
-        private_dir = rules_root / "private"
-        sources.extend(sorted(private_dir.glob("*.yaml")))
+        private_dir = rules_root / "private" / "heuristic"
+        if private_dir.exists():
+            sources.extend(sorted(private_dir.glob("*.yaml")))
+        else:
+            legacy_private = rules_root / "private"
+            if legacy_private.exists():
+                sources.extend(sorted(legacy_private.glob("*.yaml")))
+
 
     if extra_rule_files:
         sources.extend(Path(path) for path in extra_rule_files)
@@ -74,6 +82,44 @@ def load_ruleset(
         unique_sources.append(resolved)
 
     return Ruleset(tuple(rules), tuple(unique_sources))
+
+
+def load_semgrep_sources(
+    *,
+    include_private: bool = True,
+    extra_rule_files: Sequence[Path] | None = None,
+) -> Tuple[Path, ...]:
+    module_root = Path(__file__).resolve().parent
+    rules_root = module_root.parent.parent / "rules"
+    sources: List[Path] = []
+
+    semgrep_core = rules_root / "core" / "semgrep"
+    if not semgrep_core.exists():
+        semgrep_core = rules_root / "semgrep" / "core"
+    if semgrep_core.exists():
+        sources.extend(sorted(semgrep_core.glob("*.yaml")))
+
+    if include_private:
+        private_dir = rules_root / "private" / "semgrep"
+        if not private_dir.exists():
+            private_dir = rules_root / "semgrep" / "private"
+        if private_dir.exists():
+            sources.extend(sorted(private_dir.glob("*.yaml")))
+
+
+    if extra_rule_files:
+        sources.extend(Path(path) for path in extra_rule_files)
+
+    unique: list[Path] = []
+    seen = set()
+    for path in sources:
+        resolved = path.resolve()
+        if resolved in seen:
+            continue
+        seen.add(resolved)
+        unique.append(resolved)
+
+    return tuple(unique)
 
 
 def _parse_rule_document(document: object, *, source: Path) -> list[Rule]:

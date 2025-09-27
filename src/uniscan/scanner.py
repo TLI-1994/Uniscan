@@ -41,6 +41,7 @@ class ScannerConfig:
     allowed_dirs: tuple[str, ...] = ("Assets", "Packages", "ProjectSettings")
     use_semgrep: bool | None = None  # None = auto detect
     show_progress: bool = False
+    max_workers: int | None = None
 
     def binaries_enabled(self) -> bool:
         if self.skip_binaries:
@@ -55,12 +56,16 @@ class Scanner:
         self,
         *,
         ruleset: Ruleset,
+        semgrep_sources: Sequence[Path] | None,
         binary_classifier: BinaryClassifier,
         config: ScannerConfig | None = None,
     ) -> None:
         self.ruleset = ruleset
+        self._semgrep_sources = tuple(Path(p) for p in semgrep_sources or ())
         self.binary_classifier = binary_classifier
         self.config = config or ScannerConfig()
+        cpu_workers = os.cpu_count() or 1
+        self._max_workers = max(1, min(32, self.config.max_workers or cpu_workers))
         self._matchers = _build_matchers(ruleset)
         self._rule_index = {rule.id: rule for rule in ruleset.rules}
         self._semgrep_runner = self._maybe_init_semgrep_runner()
@@ -216,7 +221,9 @@ class Scanner:
             return None
         if os.environ.get("UNISCAN_DISABLE_SEMGREP"):
             return None
-        return SemgrepRunner.maybe_create(self.ruleset.sources)
+        if not self._semgrep_sources:
+            return None
+        return SemgrepRunner.maybe_create(self._semgrep_sources, jobs=self._max_workers)
 
 
 class _RuleMatcher:

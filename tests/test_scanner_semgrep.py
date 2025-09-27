@@ -23,15 +23,17 @@ def test_scanner_records_fallback_reason(monkeypatch, unity_project):
     message = "semgrep exploded"
     monkeypatch.setenv("UNISCAN_DISABLE_SEMGREP", "")
 
-    def fake_runner(_sources):
+    def fake_runner(_sources, jobs=None):
         return _FailingRunner(message)
 
     stub = type("Stub", (), {"maybe_create": staticmethod(fake_runner)})
     monkeypatch.setattr(scanner_module, "SemgrepRunner", stub)
 
     ruleset = load_ruleset(include_private=True)
+    semgrep_source = Path("rules/core/semgrep/unity_core_semgrep.yaml")
     scanner = Scanner(
         ruleset=ruleset,
+        semgrep_sources=(semgrep_source,),
         binary_classifier=BinaryClassifier(),
         config=ScannerConfig(include_binaries=False, skip_binaries=True),
     )
@@ -56,13 +58,15 @@ def test_semgrep_runner_builds_command(monkeypatch, tmp_path):
     rule = tmp_path / "rules.yaml"
     rule.write_text("rules: []")
 
-    runner = SemgrepRunner("semgrep", [rule])
+    runner = SemgrepRunner("semgrep", [rule], jobs=8)
     project = tmp_path / "proj"
     project.mkdir()
     target = project / "file.cs"
     target.write_text("class Foo {}")
+    target2 = project / "file2.cs"
+    target2.write_text("class Bar {}")
 
-    matches = runner.run(project, [target])
+    matches = runner.run(project, [target, target2])
 
     assert matches == []
     assert captured["cmd"][0] == "semgrep"
@@ -70,3 +74,4 @@ def test_semgrep_runner_builds_command(monkeypatch, tmp_path):
     assert str(rule) in captured["cmd"]
     assert captured["cwd"] == str(project)
     assert captured["env"].get("SEMGREP_SEND_METRICS") == "off"
+    assert "--jobs" in captured["cmd"]

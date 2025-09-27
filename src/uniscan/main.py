@@ -8,7 +8,7 @@ from typing import Any, Sequence
 
 from .binaries import BinaryClassifier
 from .cli import CliOptions, parse_args
-from .rules import RuleLoadError, load_ruleset
+from .rules import RuleLoadError, load_ruleset, load_semgrep_sources
 from .scanner import Finding, ScanReport, Scanner, ScannerConfig
 
 EXIT_OK = 0
@@ -62,6 +62,7 @@ def main(argv: list[str] | None = None) -> int:
 def run_scan(options: CliOptions) -> ScanReport:
     extra_rule_files = options.ruleset if options.ruleset else None
     ruleset = load_ruleset(include_private=True, extra_rule_files=extra_rule_files)
+    semgrep_sources = load_semgrep_sources(include_private=True, extra_rule_files=extra_rule_files)
 
     classifier = BinaryClassifier()
     should_include_binaries = options.include_binaries or not options.skip_binaries
@@ -72,7 +73,12 @@ def run_scan(options: CliOptions) -> ScanReport:
         show_progress=options.progress,
     )
 
-    scanner = Scanner(ruleset=ruleset, binary_classifier=classifier, config=config)
+    scanner = Scanner(
+        ruleset=ruleset,
+        semgrep_sources=semgrep_sources,
+        binary_classifier=classifier,
+        config=config,
+    )
     return scanner.scan(options.target)
 
 
