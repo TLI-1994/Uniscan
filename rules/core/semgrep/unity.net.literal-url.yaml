@@ -1,0 +1,6 @@
+rules:
+  - id: unity.net.literal-url
+    message: Hard-coded URL in source (review origin domain)
+    languages: [csharp]
+    severity: INFO
+    pattern-regex: '"https?://[^"\n]+'

@@ -6,7 +6,7 @@ import pytest
 
 import uniscan.scanner as scanner_module
 from uniscan.binaries import BinaryClassifier
-from uniscan.rules import load_ruleset
+from uniscan.rules import load_ruleset, load_semgrep_sources
 from uniscan.scanner import Scanner, ScannerConfig
 from uniscan.semgrep_runner import SemgrepRunner, SemgrepUnavailable
 
@@ -30,10 +30,11 @@ def test_scanner_records_fallback_reason(monkeypatch, unity_project):
     monkeypatch.setattr(scanner_module, "SemgrepRunner", stub)
 
     ruleset = load_ruleset(include_private=True)
-    semgrep_source = Path("rules/core/semgrep/unity_core_semgrep.yaml")
+    semgrep_sources = load_semgrep_sources(include_private=False)
+    assert semgrep_sources, "expected at least one semgrep rule source"
     scanner = Scanner(
         ruleset=ruleset,
-        semgrep_sources=(semgrep_source,),
+        semgrep_sources=semgrep_sources,
         binary_classifier=BinaryClassifier(),
         config=ScannerConfig(include_binaries=False, skip_binaries=True),
     )

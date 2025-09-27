@@ -78,3 +78,16 @@ python -m pytest
 ## License
 
 MIT License — see [LICENSE](../LICENSE) for details.
+
+---
+
+## Developer Notes
+
+Semgrep rules live under `rules/core/semgrep`, one YAML file per rule. Generated rules (such as `unity.autorun.editor-hooks`) are driven by the data in `tools/semgrep/data` and a companion script under `tools/semgrep`. Re-run the generator after editing the spec:
+
+```bash
+. venv/bin/activate
+python tools/semgrep/generate_autorun_editor_hooks.py
+```
+
+Commit both the script changes and the regenerated YAML to keep the rule definitions reproducible.

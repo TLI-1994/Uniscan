@@ -1,0 +1,17 @@
+class_attributes:
+  - InitializeOnLoad
+
+class_declarations:
+  - class $CLASS { ... }
+  - public class $CLASS { ... }
+
+signature_sets:
+  static:
+    - static void $METHOD(...) { ... }
+    - public static void $METHOD(...) { ... }
+
+method_groups:
+  - attributes:
+      - InitializeOnLoadMethod
+    signature_set: static
+    allow_args: true

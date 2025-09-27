@@ -1,0 +1,265 @@
+rules:
+- id: unity.autorun.editor-hooks
+  message: Editor/run hooks that auto-execute code
+  languages:
+  - csharp
+  severity: WARNING
+  pattern-either:
+  - pattern: |-
+      [InitializeOnLoad]
+      class $CLASS { ... }
+  - pattern: |-
+      [InitializeOnLoad]
+      public class $CLASS { ... }
+  - pattern: |-
+      [InitializeOnLoad]
+      internal class $CLASS { ... }
+  - pattern: |-
+      [InitializeOnLoad]
+      public static class $CLASS { ... }
+  - pattern: |-
+      [InitializeOnLoad]
+      static class $CLASS { ... }
+  - pattern: |-
+      [InitializeOnLoad]
+      public partial class $CLASS { ... }
+  - pattern: |-
+      [InitializeOnLoad]
+      partial class $CLASS { ... }
+  - pattern: |-
+      [UnityEditor.InitializeOnLoad]
+      class $CLASS { ... }
+  - pattern: |-
+      [UnityEditor.InitializeOnLoad]
+      public class $CLASS { ... }
+  - pattern: |-
+      [UnityEditor.InitializeOnLoad]
+      internal class $CLASS { ... }
+  - pattern: |-
+      [UnityEditor.InitializeOnLoad]
+      public static class $CLASS { ... }
+  - pattern: |-
+      [UnityEditor.InitializeOnLoad]
+      static class $CLASS { ... }
+  - pattern: |-
+      [UnityEditor.InitializeOnLoad]
+      public partial class $CLASS { ... }
+  - pattern: |-
+      [UnityEditor.InitializeOnLoad]
+      partial class $CLASS { ... }
+  - pattern: |-
+      [ExecuteAlways]
+      class $CLASS { ... }
+  - pattern: |-
+      [ExecuteAlways]
+      public class $CLASS { ... }
+  - pattern: |-
+      [ExecuteAlways]
+      internal class $CLASS { ... }
+  - pattern: |-
+      [ExecuteAlways]
+      public static class $CLASS { ... }
+  - pattern: |-
+      [ExecuteAlways]
+      static class $CLASS { ... }
+  - pattern: |-
+      [ExecuteAlways]
+      public partial class $CLASS { ... }
+  - pattern: |-
+      [ExecuteAlways]
+      partial class $CLASS { ... }
+  - pattern: |-
+      [UnityEditor.ExecuteAlways]
+      class $CLASS { ... }
+  - pattern: |-
+      [UnityEditor.ExecuteAlways]
+      public class $CLASS { ... }
+  - pattern: |-
+      [UnityEditor.ExecuteAlways]
+      internal class $CLASS { ... }
+  - pattern: |-
+      [UnityEditor.ExecuteAlways]
+      public static class $CLASS { ... }
+  - pattern: |-
+      [UnityEditor.ExecuteAlways]
+      static class $CLASS { ... }
+  - pattern: |-
+      [UnityEditor.ExecuteAlways]
+      public partial class $CLASS { ... }
+  - pattern: |-
+      [UnityEditor.ExecuteAlways]
+      partial class $CLASS { ... }
+  - pattern: |-
+      [ExecuteInEditMode]
+      class $CLASS { ... }
+  - pattern: |-
+      [ExecuteInEditMode]
+      public class $CLASS { ... }
+  - pattern: |-
+      [ExecuteInEditMode]
+      internal class $CLASS { ... }
+  - pattern: |-
+      [ExecuteInEditMode]
+      public static class $CLASS { ... }
+  - pattern: |-
+      [ExecuteInEditMode]
+      static class $CLASS { ... }
+  - pattern: |-
+      [ExecuteInEditMode]
+      public partial class $CLASS { ... }
+  - pattern: |-
+      [ExecuteInEditMode]
+      partial class $CLASS { ... }
+  - pattern: |-
+      [UnityEditor.ExecuteInEditMode]
+      class $CLASS { ... }
+  - pattern: |-
+      [UnityEditor.ExecuteInEditMode]
+      public class $CLASS { ... }
+  - pattern: |-
+      [UnityEditor.ExecuteInEditMode]
+      internal class $CLASS { ... }
+  - pattern: |-
+      [UnityEditor.ExecuteInEditMode]
+      public static class $CLASS { ... }
+  - pattern: |-
+      [UnityEditor.ExecuteInEditMode]
+      static class $CLASS { ... }
+  - pattern: |-
+      [UnityEditor.ExecuteInEditMode]
+      public partial class $CLASS { ... }
+  - pattern: |-
+      [UnityEditor.ExecuteInEditMode]
+      partial class $CLASS { ... }
+  - pattern: |-
+      [InitializeOnLoadMethod]
+      static void $METHOD(...) { ... }
+  - pattern: |-
+      [InitializeOnLoadMethod(...)]
+      static void $METHOD(...) { ... }
+  - pattern: |-
+      [InitializeOnLoadMethod]
+      public static void $METHOD(...) { ... }
+  - pattern: |-
+      [InitializeOnLoadMethod(...)]
+      public static void $METHOD(...) { ... }
+  - pattern: |-
+      [InitializeOnLoadMethod]
+      private static void $METHOD(...) { ... }
+  - pattern: |-
+      [InitializeOnLoadMethod(...)]
+      private static void $METHOD(...) { ... }
+  - pattern: |-
+      [UnityEditor.InitializeOnLoadMethod]
+      static void $METHOD(...) { ... }
+  - pattern: |-
+      [UnityEditor.InitializeOnLoadMethod(...)]
+      static void $METHOD(...) { ... }
+  - pattern: |-
+      [UnityEditor.InitializeOnLoadMethod]
+      public static void $METHOD(...) { ... }
+  - pattern: |-
+      [UnityEditor.InitializeOnLoadMethod(...)]
+      public static void $METHOD(...) { ... }
+  - pattern: |-
+      [UnityEditor.InitializeOnLoadMethod]
+      private static void $METHOD(...) { ... }
+  - pattern: |-
+      [UnityEditor.InitializeOnLoadMethod(...)]
+      private static void $METHOD(...) { ... }
+  - pattern: |-
+      [RuntimeInitializeOnLoadMethod]
+      static void $METHOD(...) { ... }
+  - pattern: |-
+      [RuntimeInitializeOnLoadMethod(...)]
+      static void $METHOD(...) { ... }
+  - pattern: |-
+      [RuntimeInitializeOnLoadMethod]
+      public static void $METHOD(...) { ... }
+  - pattern: |-
+      [RuntimeInitializeOnLoadMethod(...)]
+      public static void $METHOD(...) { ... }
+  - pattern: |-
+      [RuntimeInitializeOnLoadMethod]
+      private static void $METHOD(...) { ... }
+  - pattern: |-
+      [RuntimeInitializeOnLoadMethod(...)]
+      private static void $METHOD(...) { ... }
+  - pattern: |-
+      [UnityEditor.RuntimeInitializeOnLoadMethod]
+      static void $METHOD(...) { ... }
+  - pattern: |-
+      [UnityEditor.RuntimeInitializeOnLoadMethod(...)]
+      static void $METHOD(...) { ... }
+  - pattern: |-
+      [UnityEditor.RuntimeInitializeOnLoadMethod]
+      public static void $METHOD(...) { ... }
+  - pattern: |-
+      [UnityEditor.RuntimeInitializeOnLoadMethod(...)]
+      public static void $METHOD(...) { ... }
+  - pattern: |-
+      [UnityEditor.RuntimeInitializeOnLoadMethod]
+      private static void $METHOD(...) { ... }
+  - pattern: |-
+      [UnityEditor.RuntimeInitializeOnLoadMethod(...)]
+      private static void $METHOD(...) { ... }
+  - pattern: |-
+      [DidReloadScripts]
+      static void $METHOD(...) { ... }
+  - pattern: |-
+      [DidReloadScripts]
+      public static void $METHOD(...) { ... }
+  - pattern: |-
+      [UnityEditor.DidReloadScripts]
+      static void $METHOD(...) { ... }
+  - pattern: |-
+      [UnityEditor.DidReloadScripts]
+      public static void $METHOD(...) { ... }
+  - pattern: |-
+      [PreProcessBuild]
+      void $METHOD(...) { ... }
+  - pattern: |-
+      [PreProcessBuild(...)]
+      void $METHOD(...) { ... }
+  - pattern: |-
+      [PreProcessBuild]
+      public void $METHOD(...) { ... }
+  - pattern: |-
+      [PreProcessBuild(...)]
+      public void $METHOD(...) { ... }
+  - pattern: |-
+      [UnityEditor.PreProcessBuild]
+      void $METHOD(...) { ... }
+  - pattern: |-
+      [UnityEditor.PreProcessBuild(...)]
+      void $METHOD(...) { ... }
+  - pattern: |-
+      [UnityEditor.PreProcessBuild]
+      public void $METHOD(...) { ... }
+  - pattern: |-
+      [UnityEditor.PreProcessBuild(...)]
+      public void $METHOD(...) { ... }
+  - pattern: |-
+      [PostProcessBuild]
+      void $METHOD(...) { ... }
+  - pattern: |-
+      [PostProcessBuild(...)]
+      void $METHOD(...) { ... }
+  - pattern: |-
+      [PostProcessBuild]
+      public void $METHOD(...) { ... }
+  - pattern: |-
+      [PostProcessBuild(...)]
+      public void $METHOD(...) { ... }
+  - pattern: |-
+      [UnityEditor.PostProcessBuild]
+      void $METHOD(...) { ... }
+  - pattern: |-
+      [UnityEditor.PostProcessBuild(...)]
+      void $METHOD(...) { ... }
+  - pattern: |-
+      [UnityEditor.PostProcessBuild]
+      public void $METHOD(...) { ... }
+  - pattern: |-
+      [UnityEditor.PostProcessBuild(...)]
+      public void $METHOD(...) { ... }

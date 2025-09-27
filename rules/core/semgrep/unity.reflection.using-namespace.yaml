@@ -1,0 +1,6 @@
+rules:
+  - id: unity.reflection.using-namespace
+    message: Uses System.Reflection (review in context)
+    languages: [csharp]
+    severity: INFO
+    pattern: using System.Reflection;

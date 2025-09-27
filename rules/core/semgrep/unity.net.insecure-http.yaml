@@ -1,0 +1,6 @@
+rules:
+  - id: unity.net.insecure-http
+    message: Plain HTTP (insecure) URL used
+    languages: [csharp]
+    severity: WARNING
+    pattern-regex: '"http://[^"\n]+'

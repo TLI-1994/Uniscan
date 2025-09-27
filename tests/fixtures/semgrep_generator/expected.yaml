@@ -1,0 +1,25 @@
+rules:
+- id: unity.autorun.editor-hooks
+  message: Editor/run hooks that auto-execute code
+  languages:
+  - csharp
+  severity: WARNING
+  pattern-either:
+  - pattern: |-
+      [InitializeOnLoad]
+      class $CLASS { ... }
+  - pattern: |-
+      [InitializeOnLoad]
+      public class $CLASS { ... }
+  - pattern: |-
+      [InitializeOnLoadMethod]
+      static void $METHOD(...) { ... }
+  - pattern: |-
+      [InitializeOnLoadMethod(...)]
+      static void $METHOD(...) { ... }
+  - pattern: |-
+      [InitializeOnLoadMethod]
+      public static void $METHOD(...) { ... }
+  - pattern: |-
+      [InitializeOnLoadMethod(...)]
+      public static void $METHOD(...) { ... }
