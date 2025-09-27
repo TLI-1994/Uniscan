@@ -48,6 +48,7 @@ def test_parse_args_returns_cli_options():
     assert args.verbosity == "normal"
     assert args.semgrep == "auto"
     assert args.progress is True
+    assert args.pretty is False
 
 
 def test_parser_rejects_invalid_format():
@@ -77,3 +78,8 @@ def test_skip_binaries_flag_disables_inclusion():
     args = parse_args(["/tmp", "--skip-binaries"])
     assert args.include_binaries is False
     assert args.skip_binaries is True
+
+
+def test_pretty_flag_enables_grouped_output():
+    args = parse_args(["/tmp", "--pretty"])
+    assert args.pretty is True

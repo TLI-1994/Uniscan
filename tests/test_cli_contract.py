@@ -79,3 +79,20 @@ def test_cli_errors_on_missing_target(tmp_path):
 
     assert result.returncode == 3
     assert "not found" in result.stderr.lower()
+
+
+@pytest.mark.integration
+def test_pretty_output_groups_findings(unity_project):
+    target = unity_project("risky_project")
+    result = run_cli(target, "--format", "text", "--pretty", "--no-colors")
+
+    assert result.returncode == 0, result.stderr
+    output = result.stdout.splitlines()
+
+    # Expect a file header and a single rule line for process-start
+    file_lines = [line for line in output if line.endswith("UnsafeBehaviour.cs")]
+    assert file_lines, output
+    rule_lines = [line for line in output if "core.unity.proc.exec.process-start" in line]
+    assert len(rule_lines) == 1
+    # line summary should mention lines
+    assert "lines" in rule_lines[0]

@@ -27,6 +27,7 @@ class CliOptions:
     verbosity: str = DEFAULT_VERBOSITY
     semgrep: str = "auto"
     progress: bool = True
+    pretty: bool = False
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -92,6 +93,20 @@ def build_parser() -> argparse.ArgumentParser:
     )
 
     parser.add_argument(
+        "--pretty",
+        dest="pretty",
+        action="store_true",
+        help="Group findings by file and rule for easier reading",
+    )
+    parser.add_argument(
+        "--no-pretty",
+        dest="pretty",
+        action="store_false",
+        help="Disable grouped output (default)",
+    )
+    parser.set_defaults(pretty=False)
+
+    parser.add_argument(
         "--progress",
         dest="progress",
         action="store_true",
@@ -149,6 +164,7 @@ def parse_args(argv: Sequence[str]) -> CliOptions:
         verbosity=namespace.verbosity,
         semgrep=namespace.engine,
         progress=namespace.progress,
+        pretty=namespace.pretty,
     )
 
     return options

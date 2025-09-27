@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import sys
 from pathlib import Path
+from collections import defaultdict
 from typing import Any, Sequence
 
 from .binaries import BinaryClassifier
@@ -143,20 +144,17 @@ def _format_findings_text(findings: Sequence[Finding], options: CliOptions) -> l
     if options.verbosity == "quiet":
         return []
 
+    if options.pretty:
+        return _format_grouped_findings(findings, options)
+
     colorize = not options.no_colors
     lines: list[str] = []
     for finding in findings:
-        rule_display = finding.rule_id
-        severity = finding.severity.upper()
+        rule_display, severity_text = _decorate_rule_and_severity(
+            finding.rule_id, finding.severity, colorize
+        )
         location = f"{finding.path}:{finding.line}" if finding.line else str(finding.path)
-        snippet = f" \u2014 {finding.snippet}" if options.verbosity == "debug" and finding.snippet else ""
-
-        severity_text = severity
-        if colorize:
-            color = _severity_color(finding.severity)
-            if color:
-                rule_display = f"{color}{rule_display}{_RESET}"
-                severity_text = f"{color}{severity}{_RESET}"
+        snippet = _format_snippet(finding.snippet, options)
 
         lines.append(f"[{rule_display}] {severity_text} - {finding.message} ({location}){snippet}")
 
@@ -165,6 +163,69 @@ def _format_findings_text(findings: Sequence[Finding], options: CliOptions) -> l
 
 def _severity_color(severity: str) -> str | None:
     return _COLORS.get(severity.lower())
+
+
+def _decorate_rule_and_severity(rule_id: str, severity: str, colorize: bool) -> tuple[str, str]:
+    severity_text = severity.upper()
+    if not colorize:
+        return rule_id, severity_text
+
+    color = _severity_color(severity)
+    if not color:
+        return rule_id, severity_text
+
+    return f"{color}{rule_id}{_RESET}", f"{color}{severity_text}{_RESET}"
+
+
+def _format_snippet(snippet: str | None, options: CliOptions) -> str:
+    if options.verbosity != "debug" or not snippet:
+        return ""
+    return f" \u2014 {snippet}"
+
+
+def _format_grouped_findings(findings: Sequence[Finding], options: CliOptions) -> list[str]:
+    colorize = not options.no_colors
+    debug = options.verbosity == "debug"
+
+    by_file: dict[str, dict[str, list[Finding]]] = defaultdict(lambda: defaultdict(list))
+    for finding in findings:
+        by_file[str(finding.path)][finding.rule_id].append(finding)
+
+    lines: list[str] = []
+    for file_index, file_path in enumerate(sorted(by_file.keys())):
+        if file_index > 0:
+            lines.append("")
+        lines.append(file_path)
+
+        rule_map = by_file[file_path]
+        for rule_id in sorted(rule_map.keys()):
+            group = rule_map[rule_id]
+            exemplar = group[0]
+            rule_display, severity_text = _decorate_rule_and_severity(rule_id, exemplar.severity, colorize)
+            message = exemplar.message
+
+            line_numbers = sorted({f.line for f in group if f.line is not None})
+            if line_numbers:
+                displayed = ", ".join(str(num) for num in line_numbers[:10])
+                if len(line_numbers) > 10:
+                    displayed += ", …"
+                line_info = f"lines {displayed}"
+            else:
+                line_info = "lines n/a"
+            if len(group) > len(line_numbers):
+                line_info += f" ({len(group)} matches)"
+
+            snippet_text = ""
+            if debug:
+                snippets = [f.snippet for f in group if f.snippet]
+                if snippets:
+                    snippet_text = f" \u2014 {snippets[0]}"
+                    if len(snippets) > 1:
+                        snippet_text += f" (+{len(snippets) - 1} more)"
+
+            lines.append(f"  [{rule_display}] {severity_text} - {message} ({line_info}){snippet_text}")
+
+    return lines
 
 
 def _print_error(message: str) -> None:
