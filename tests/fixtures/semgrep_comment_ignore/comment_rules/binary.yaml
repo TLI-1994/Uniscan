@@ -1,0 +1,6 @@
+rules:
+- id: test.binary.formatter
+  message: test
+  languages: [csharp]
+  severity: INFO
+  pattern: new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter(...)

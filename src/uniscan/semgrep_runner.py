@@ -12,6 +12,20 @@ from pathlib import Path
 from typing import List, Sequence
 
 
+_DEFAULT_ENV: dict[str, str] = {
+    "SEMGREP_SKIP_UPDATE_CHECK": "1",
+    "SEMGREP_SEND_METRICS": "off",
+    "SEMGREP_LOG_FILE": "/dev/null",
+}
+
+
+def _ensure_semgrep_environment(env: dict[str, str] | None = None) -> None:
+    target = env if env is not None else os.environ
+    for key, value in _DEFAULT_ENV.items():
+        target.setdefault(key, value)
+    target.setdefault("SSL_CERT_FILE", certifi.where())
+
+
 class SemgrepUnavailable(RuntimeError):
     """Raised when Semgrep cannot be executed."""
 
@@ -44,6 +58,7 @@ class SemgrepRunner:
         binary = _resolve_semgrep_binary()
         if binary is None:
             return None
+        _ensure_semgrep_environment()
         return cls(binary, rule_files, jobs=jobs)
 
     def run(self, project_root: Path, targets: Sequence[Path]) -> list[SemgrepMatch]:
@@ -65,10 +80,7 @@ class SemgrepRunner:
         command.extend(str(target) for target in targets)
 
         env = os.environ.copy()
-        env.setdefault("SEMGREP_SKIP_UPDATE_CHECK", "1")
-        env.setdefault("SEMGREP_SEND_METRICS", "off")
-        env.setdefault("SSL_CERT_FILE", certifi.where())
-        env.setdefault("SEMGREP_LOG_FILE", "/dev/null")
+        _ensure_semgrep_environment(env)
 
         try:
             proc = subprocess.run(

@@ -1,0 +1,15 @@
+rules:
+- id: test.autorun.class
+  message: test
+  languages: [csharp]
+  severity: INFO
+  pattern-either:
+  - pattern: |-
+      [InitializeOnLoad]
+      class $CLASS { ... }
+  - pattern: |-
+      [InitializeOnLoadMethod]
+      static void $METHOD(...) { ... }
+  - pattern: |-
+      [RuntimeInitializeOnLoadMethod(...)]
+      static void $METHOD(...) { ... }
