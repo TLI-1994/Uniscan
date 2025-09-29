@@ -47,6 +47,7 @@ Desktop.ini
 
 # ---- Logs ----
 *.log
+.semgrep/
 
 # ---- Coverage / Testing ----
 .coverage
@@ -60,4 +61,3 @@ htmlcov/
 
 # ---- Jupyter ----
 .ipynb_checkpoints
-

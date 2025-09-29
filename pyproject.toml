@@ -6,14 +6,29 @@ build-backend = "setuptools.build_meta"
 name = "uniscan"
 version = "0.1.0"
 description = "A lightweight CLI tool to audit Unity projects for risky code and binaries."
-readme = "docs/README.md"
+readme = { file = "docs/README.md", content-type = "text/markdown" }
 license = { file = "LICENSE" }
 requires-python = ">=3.8"
+authors = [
+    { name = "Tianjiao Li" }
+]
+keywords = [
+    "unity",
+    "security",
+    "static-analysis",
+    "cli",
+]
 
 classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
+    "Topic :: Security :: Vulnerability Assessment",
+    "Topic :: Software Development :: Quality Assurance",
 ]
 
 dependencies = [
@@ -21,6 +36,11 @@ dependencies = [
     "PyYAML>=6.0",
     "certifi>=2023.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/TLI-1994/Uniscan"
+Repository = "https://github.com/TLI-1994/Uniscan"
+Issues = "https://github.com/TLI-1994/Uniscan/issues"
 
 [project.scripts]
 uniscan = "uniscan.main:main"
@@ -30,8 +50,13 @@ test = [
     "pytest>=7.0",
 ]
 
-[tool.setuptools.packages.find]
-where = ["src"]
+[tool.setuptools]
+packages = ["uniscan", "uniscan_rules"]
+package-dir = { "uniscan" = "src/uniscan", "uniscan_rules" = "rules" }
+include-package-data = true
+
+[tool.setuptools.package-data]
+"uniscan_rules" = ["core/**/*.yaml"]
 
 [tool.pytest.ini_options]
 markers = [

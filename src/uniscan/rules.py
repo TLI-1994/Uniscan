@@ -1,9 +1,11 @@
 """Rule loading and representation utilities for Uniscan."""
 from __future__ import annotations
 
+from contextlib import contextmanager
 from dataclasses import dataclass
+from importlib import resources
 from pathlib import Path
-from typing import Iterable, List, Sequence, Tuple
+from typing import Iterable, Iterator, List, Sequence, Tuple
 
 import yaml
 
@@ -40,24 +42,22 @@ def load_ruleset(
 ) -> Ruleset:
     """Load rules from bundled YAML files and optional user-provided files."""
 
-    module_root = Path(__file__).resolve().parent
-    rules_root = module_root.parent.parent / "rules"
     sources: List[Path] = []
 
-    core_dir = rules_root / "core" / "heuristic"
-    if not core_dir.exists():
-        core_dir = rules_root / "core"
-    sources.extend(sorted(core_dir.glob("*.yaml")))
+    with _rules_root() as rules_root:
+        core_dir = rules_root / "core" / "heuristic"
+        if not core_dir.exists():
+            core_dir = rules_root / "core"
+        sources.extend(sorted(core_dir.glob("*.yaml")))
 
-    if include_private:
-        private_dir = rules_root / "private" / "heuristic"
-        if private_dir.exists():
-            sources.extend(sorted(private_dir.glob("*.yaml")))
-        else:
-            legacy_private = rules_root / "private"
-            if legacy_private.exists():
-                sources.extend(sorted(legacy_private.glob("*.yaml")))
-
+        if include_private:
+            private_dir = rules_root / "private" / "heuristic"
+            if private_dir.exists():
+                sources.extend(sorted(private_dir.glob("*.yaml")))
+            else:
+                legacy_private = rules_root / "private"
+                if legacy_private.exists():
+                    sources.extend(sorted(legacy_private.glob("*.yaml")))
 
     if extra_rule_files:
         sources.extend(Path(path) for path in extra_rule_files)
@@ -89,23 +89,21 @@ def load_semgrep_sources(
     include_private: bool = True,
     extra_rule_files: Sequence[Path] | None = None,
 ) -> Tuple[Path, ...]:
-    module_root = Path(__file__).resolve().parent
-    rules_root = module_root.parent.parent / "rules"
     sources: List[Path] = []
 
-    semgrep_core = rules_root / "core" / "semgrep"
-    if not semgrep_core.exists():
-        semgrep_core = rules_root / "semgrep" / "core"
-    if semgrep_core.exists():
-        sources.extend(sorted(semgrep_core.glob("*.yaml")))
+    with _rules_root() as rules_root:
+        semgrep_core = rules_root / "core" / "semgrep"
+        if not semgrep_core.exists():
+            semgrep_core = rules_root / "semgrep" / "core"
+        if semgrep_core.exists():
+            sources.extend(sorted(semgrep_core.glob("*.yaml")))
 
-    if include_private:
-        private_dir = rules_root / "private" / "semgrep"
-        if not private_dir.exists():
-            private_dir = rules_root / "semgrep" / "private"
-        if private_dir.exists():
-            sources.extend(sorted(private_dir.glob("*.yaml")))
-
+        if include_private:
+            private_dir = rules_root / "private" / "semgrep"
+            if not private_dir.exists():
+                private_dir = rules_root / "semgrep" / "private"
+            if private_dir.exists():
+                sources.extend(sorted(private_dir.glob("*.yaml")))
 
     if extra_rule_files:
         sources.extend(Path(path) for path in extra_rule_files)
@@ -177,3 +175,20 @@ def _infer_tag(source: Path) -> str:
     if "private" in parts:
         return "private"
     return "external"
+
+
+@contextmanager
+def _rules_root() -> Iterator[Path]:
+    module_root = Path(__file__).resolve().parent
+    repo_rules = module_root.parent.parent / "rules"
+    if repo_rules.exists():
+        yield repo_rules
+        return
+
+    try:
+        rules_traversable = resources.files("uniscan_rules")
+    except ModuleNotFoundError as exc:  # pragma: no cover - packaging error
+        raise RuleLoadError("Bundled rules are unavailable") from exc
+
+    with resources.as_file(rules_traversable) as bundle_root:
+        yield bundle_root
