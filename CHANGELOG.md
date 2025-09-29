@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.1 - 2024-09-29
+### Highlights
+- Added `-V/--version` flag to report the installed Uniscan version.
+- Clarified CLI flag defaults and documented Semgrep snippet behavior.
+- Overhauled README with PyPI badge, installation guidance, and expanded disclaimer.
+
+### Packaging & Meta
+- Converted the README license link to an absolute URL so it renders correctly on PyPI.
+- Strengthened the README legal disclaimer and encouraged community contributions for rule coverage.
+
 ## 0.1.0 - 2024-09-28
 ### Highlights
 - 🎉 First public release of Uniscan — a lightweight security scanner for Unity projects.
