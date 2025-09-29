@@ -67,7 +67,7 @@ python -m pytest
 
 ## License
 
-MIT License — see [LICENSE](../LICENSE) for details.
+MIT License — see [LICENSE](https://github.com/TLI-1994/Uniscan/blob/main/LICENSE) for details.
 
 ---
 
