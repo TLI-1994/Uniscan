@@ -36,14 +36,15 @@ PYTHONPATH=src python -m uniscan.main /path/to/unity/project
 
 Common flags:
 
-* `--format {text|json}` – choose human-readable or machine-readable output (`text` is default)
-* `--no-colors` – disable ANSI colours in text mode
-* `--ruleset path/to/extra_rules.yaml` – load additional Semgrep-style YAML rules (may be passed multiple times)
-* `--skip-binaries` / `--include-binaries` – control native binary detection
-* `--verbosity {quiet|normal|debug}` – adjust the amount of detail printed (aliases `--quiet` and `--debug`)
-* `--engine {auto|semgrep|heuristic}` – force Semgrep, always use the lightweight heuristic scanner, or let Uniscan decide automatically
-* `--progress` / `--no-progress` – toggle the live progress indicator (enabled by default)
-* `--pretty` / `--no-pretty` – group findings by file and rule for easier human review (default off)
+* `--format {text|json}` (default: `text`) – choose human-readable or machine-readable output.
+* `--no-colors` (default: off) – disable ANSI colours in text mode.
+* `--ruleset path/to/extra_rules.yaml` – load additional Semgrep-style YAML rules (repeatable).
+* `--include-binaries` / `--skip-binaries` (default: include) – control native binary detection.
+* `--verbosity {quiet|normal|debug}` (default: `normal`) – adjust the amount of detail (`--quiet` / `--debug` aliases).
+* `--engine {auto|heuristic|semgrep}` (default: `auto`) – auto-select, force the heuristic engine, or use Semgrep.
+* `--progress` / `--no-progress` (default: progress on) – toggle the live progress indicator.
+* `--pretty` / `--no-pretty` (default: grouped off) – group findings by file and rule for easier human review.
+* `--version` – print the installed Uniscan version and exit.
 
 Each run reports which analysis engine was used (`semgrep` when available, otherwise a heuristic fallback) so you can confirm full rule coverage.
 

@@ -7,6 +7,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable, Sequence
 
+from . import __version__
+
 
 DEFAULT_FORMAT = "text"
 DEFAULT_VERBOSITY = "normal"
@@ -34,6 +36,13 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="uniscan",
         description="Audit Unity projects for suspicious code and native binaries.",
+    )
+
+    parser.add_argument(
+        "-V",
+        "--version",
+        action="version",
+        version=f"%(prog)s {__version__}",
     )
 
     parser.add_argument(

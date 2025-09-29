@@ -20,6 +20,7 @@ def test_parser_defines_expected_arguments():
         "verbosity",
         "engine",
         "progress",
+        "version",
     }:
         assert expected in options
 
@@ -55,6 +56,15 @@ def test_parser_rejects_invalid_format():
     parser = build_parser()
     with pytest.raises(SystemExit):
         parser.parse_args(["/tmp", "--format", "xml"])
+
+
+def test_version_flag_prints_version(capsys):
+    parser = build_parser()
+    with pytest.raises(SystemExit):
+        parser.parse_args(["--version"])
+
+    captured = capsys.readouterr()
+    assert "uniscan" in captured.out
 
 
 @pytest.mark.parametrize("flag", ["--quiet", "--debug"])
