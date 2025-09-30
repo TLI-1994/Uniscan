@@ -10,7 +10,7 @@ from .binaries import BinaryClassifier
 from .cli import CliOptions, parse_args
 from .rules import RuleLoadError, load_ruleset, load_semgrep_sources
 from .scanner import Finding, ScanReport, Scanner, ScannerConfig
-from .severity import severity_sort_key
+from .severity import ORDERED_SEVERITIES, severity_sort_key
 
 EXIT_OK = 0
 EXIT_USAGE = 2
@@ -209,13 +209,39 @@ def _format_grouped_findings(findings: Sequence[Finding], options: CliOptions) -
     for finding in findings:
         by_file[str(finding.path)][finding.rule_id].append(finding)
 
+    file_severity_rank: dict[str, int] = {}
+    for file_path, rule_map in by_file.items():
+        best = min(
+            severity_sort_key(finding.severity)
+            for group in rule_map.values()
+            for finding in group
+        )
+        file_severity_rank[file_path] = best
+
+    ordered_files = sorted(
+        by_file.keys(), key=lambda path: (file_severity_rank[path], path)
+    )
+
     lines: list[str] = []
-    for file_index, file_path in enumerate(sorted(by_file.keys())):
+    for file_index, file_path in enumerate(ordered_files):
         if file_index > 0:
             lines.append("")
         lines.append(file_path)
 
         rule_map = by_file[file_path]
+        severity_counts: dict[str, int] = {}
+        for group in rule_map.values():
+            for finding in group:
+                severity_counts[finding.severity] = severity_counts.get(finding.severity, 0) + 1
+
+        summary_parts = [
+            f"{level}:{severity_counts[level]}"
+            for level in ORDERED_SEVERITIES
+            if severity_counts.get(level)
+        ]
+        if summary_parts:
+            lines.append("  Severity summary: " + ", ".join(summary_parts))
+
         for rule_id in sorted(
             rule_map.keys(),
             key=lambda rid: (

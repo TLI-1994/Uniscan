@@ -44,6 +44,8 @@ _ORDER = (
     Severity.LOW,
 )
 
+ORDERED_SEVERITIES = tuple(level.value for level in _ORDER)
+
 _ORDER_INDEX = {level: index for index, level in enumerate(_ORDER)}
 
 
