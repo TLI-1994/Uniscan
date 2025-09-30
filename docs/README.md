@@ -1,6 +1,6 @@
 # Usentinel
 
-[![PyPI](https://img.shields.io/pypi/v/usentinel.svg?label=PyPI)](https://pypi.org/project/usentinel/)
+[![PyPI](https://img.shields.io/pypi/v/usentinel.svg?label=PyPI)](https://pypi.org/project/usentinel/) [![Python Versions](https://img.shields.io/pypi/pyversions/usentinel.svg)](https://pypi.org/project/usentinel/) [![License](https://img.shields.io/pypi/l/usentinel.svg)](https://github.com/TLI-1994/Usentinel/blob/main/LICENSE) [![CI](https://github.com/TLI-1994/Usentinel/actions/workflows/ci.yml/badge.svg)](https://github.com/TLI-1994/Usentinel/actions/workflows/ci.yml)
 
 **Usentinel** is a **lightweight, read-only command-line interface (CLI) tool** designed to **audit Unity projects** for potentially hazardous code and native binaries. It provides static checks that highlight code patterns worth deeper inspection.
 
