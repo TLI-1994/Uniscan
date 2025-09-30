@@ -13,6 +13,7 @@ from typing import Iterable, Iterator, Sequence
 from .binaries import BinaryClassifier, BinaryFinding
 from .rules import Rule, Ruleset
 from .semgrep_runner import SemgrepMatch, SemgrepRunner, SemgrepUnavailable
+from .severity import Severity, normalize_severity
 
 
 @dataclass(frozen=True)
@@ -173,7 +174,7 @@ class Scanner:
                 findings.append(
                     Finding(
                         rule_id=_format_rule_id(matcher.rule),
-                        severity=matcher.rule.severity.lower(),
+                        severity=matcher.rule.severity,
                         message=matcher.rule.message,
                         path=path,
                         line=line_no,
@@ -188,7 +189,10 @@ class Scanner:
         for match in matches:
             rule = self._resolve_rule(match.rule_id)
             message = rule.message if rule else (match.message or match.rule_id)
-            severity = (rule.severity if rule else (match.severity or "WARNING")).lower()
+            if rule:
+                severity = rule.severity
+            else:
+                severity = normalize_severity(match.severity).value
             path = match.path
             if not path.is_absolute():
                 path = (project_root / path).resolve()
@@ -335,10 +339,10 @@ def _build_substring_checkers(pattern: str) -> list[_PatternChecker]:
 def _summarize(findings: Sequence[Finding], binaries: Sequence[BinaryFinding]) -> dict:
     severity_counts: dict[str, int] = {
         "total": len(findings),
-        "info": 0,
-        "warning": 0,
-        "error": 0,
-        "critical": 0,
+        Severity.CRITICAL.value: 0,
+        Severity.HIGH.value: 0,
+        Severity.MEDIUM.value: 0,
+        Severity.LOW.value: 0,
     }
     for finding in findings:
         severity = finding.severity.lower()

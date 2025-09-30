@@ -43,7 +43,7 @@ def test_risky_project_reports_process_start(unity_project):
     assert payload["engine"]["name"] == "heuristic"
     assert "core.unity.proc.exec.process-start" in rule_ids
     severity_counts = payload["summary"]["findings"]
-    assert severity_counts["error"] >= 1
+    assert severity_counts["high"] >= 1
 
 
 @pytest.mark.integration

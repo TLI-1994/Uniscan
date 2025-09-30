@@ -9,6 +9,8 @@ from typing import Iterable, Iterator, List, Sequence, Tuple
 
 import yaml
 
+from .severity import normalize_severity
+
 
 class RuleLoadError(RuntimeError):
     """Raised when a rule file cannot be parsed or is invalid."""
@@ -144,7 +146,7 @@ def _parse_rule_document(document: object, *, source: Path) -> list[Rule]:
             raise RuleLoadError(f"Rule {rule_id} in {source} must define a list of languages")
         languages = tuple(str(lang) for lang in languages_raw)
 
-        severity = str(entry.get("severity", "INFO")).upper()
+        severity = normalize_severity(entry.get("severity")).value
 
         parsed.append(
             Rule(

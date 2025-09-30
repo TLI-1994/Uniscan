@@ -19,9 +19,9 @@ EXIT_FAILURE = 1
 
 _RESET = "\x1b[0m"
 _COLORS = {
-    "info": "\x1b[34m",  # blue
-    "warning": "\x1b[33m",  # yellow
-    "error": "\x1b[31m",  # red
+    "low": "\x1b[34m",      # blue
+    "medium": "\x1b[33m",   # yellow
+    "high": "\x1b[31m",     # red
     "critical": "\x1b[35m",  # magenta
 }
 
@@ -131,11 +131,12 @@ def _report_to_text(report: ScanReport, options: CliOptions) -> str:
 
     counts = report.summary.get("findings", {})
     lines.append(
-        "Findings: total={total} info={info} warning={warning} error={error}".format(
+        "Findings: total={total} critical={critical} high={high} medium={medium} low={low}".format(
             total=counts.get("total", 0),
-            info=counts.get("info", 0),
-            warning=counts.get("warning", 0),
-            error=counts.get("error", 0),
+            critical=counts.get("critical", 0),
+            high=counts.get("high", 0),
+            medium=counts.get("medium", 0),
+            low=counts.get("low", 0),
         )
     )
     if report.summary.get("binaries"):

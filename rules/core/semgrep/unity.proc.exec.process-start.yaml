@@ -2,7 +2,7 @@ rules:
   - id: unity.proc.exec.process-start
     message: External process execution
     languages: [csharp]
-    severity: ERROR
+    severity: HIGH
     pattern-either:
       - pattern: System.Diagnostics.Process.Start(...)
       - pattern: new System.Diagnostics.ProcessStartInfo(...)

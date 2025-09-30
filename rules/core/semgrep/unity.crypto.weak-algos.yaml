@@ -2,7 +2,7 @@ rules:
   - id: unity.crypto.weak-algos
     message: Weak/legacy crypto (DES/RC2/3DES)
     languages: [csharp]
-    severity: WARNING
+    severity: MEDIUM
     pattern-either:
       - pattern: System.Security.Cryptography.DES.Create(...)
       - pattern: System.Security.Cryptography.RC2.Create(...)

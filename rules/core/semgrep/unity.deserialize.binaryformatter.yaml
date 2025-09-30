@@ -2,7 +2,7 @@ rules:
   - id: unity.deserialize.binaryformatter
     message: Insecure BinaryFormatter deserialization
     languages: [csharp]
-    severity: ERROR
+    severity: HIGH
     pattern-either:
       - pattern: new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter(...)
       - pattern: new BinaryFormatter(...)

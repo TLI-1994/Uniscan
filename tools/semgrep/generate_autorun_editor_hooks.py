@@ -75,7 +75,7 @@ def generate() -> dict[str, Any]:
         "id": "unity.autorun.editor-hooks",
         "message": "Editor/run hooks that auto-execute code",
         "languages": ["csharp"],
-        "severity": "WARNING",
+        "severity": "MEDIUM",
         "pattern-either": patterns,
     }
     return {"rules": [rule]}

@@ -2,5 +2,5 @@ rules:
   - id: unity.net.insecure-http
     message: Plain HTTP (insecure) URL used
     languages: [csharp]
-    severity: WARNING
+    severity: MEDIUM
     pattern-regex: '"http://[^"\n]+'

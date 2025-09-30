@@ -2,5 +2,5 @@ rules:
   - id: unity.net.discord-webhook
     message: Discord webhook found (common exfil target)
     languages: [csharp]
-    severity: ERROR
+    severity: HIGH
     pattern-regex: 'https://(?:canary\.|ptb\.)?discord\.com/api/webhooks/'
