@@ -56,10 +56,13 @@ Example:
 usentinel ~/Projects/MyUnityGame --format json --skip-binaries
 ```
 
-### Run the test suite (optional)
+### Run the test suite (contributors)
+
+If you are contributing to Usentinel, install the project in editable mode with the
+testing extras and run the suite from the repository root:
 
 ```bash
-pip install usentinel[test]
+pip install -e '.[test]'
 python -m pytest
 ```
 
