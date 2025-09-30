@@ -10,6 +10,7 @@ from .binaries import BinaryClassifier
 from .cli import CliOptions, parse_args
 from .rules import RuleLoadError, load_ruleset, load_semgrep_sources
 from .scanner import Finding, ScanReport, Scanner, ScannerConfig
+from .severity import severity_sort_key
 
 EXIT_OK = 0
 EXIT_USAGE = 2
@@ -154,9 +155,19 @@ def _format_findings_text(findings: Sequence[Finding], options: CliOptions) -> l
     if options.pretty:
         return _format_grouped_findings(findings, options)
 
+    sorted_findings = sorted(
+        findings,
+        key=lambda f: (
+            severity_sort_key(f.severity),
+            f.rule_id,
+            str(f.path),
+            f.line or 0,
+        ),
+    )
+
     colorize = not options.no_colors
     lines: list[str] = []
-    for finding in findings:
+    for finding in sorted_findings:
         rule_display, severity_text = _decorate_rule_and_severity(
             finding.rule_id, finding.severity, colorize
         )
@@ -205,7 +216,13 @@ def _format_grouped_findings(findings: Sequence[Finding], options: CliOptions) -
         lines.append(file_path)
 
         rule_map = by_file[file_path]
-        for rule_id in sorted(rule_map.keys()):
+        for rule_id in sorted(
+            rule_map.keys(),
+            key=lambda rid: (
+                severity_sort_key(rule_map[rid][0].severity),
+                rid,
+            ),
+        ):
             group = rule_map[rule_id]
             exemplar = group[0]
             rule_display, severity_text = _decorate_rule_and_severity(rule_id, exemplar.severity, colorize)

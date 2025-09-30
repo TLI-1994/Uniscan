@@ -35,3 +35,24 @@ _LEGACY_MAP: dict[str, Severity] = {
 def normalize_severity(value: str | None) -> Severity:
     """Normalize a severity string to one of the canonical levels."""
     return Severity.normalize(value)
+
+
+_ORDER = (
+    Severity.CRITICAL,
+    Severity.HIGH,
+    Severity.MEDIUM,
+    Severity.LOW,
+)
+
+_ORDER_INDEX = {level: index for index, level in enumerate(_ORDER)}
+
+
+def severity_sort_key(value: str | Severity) -> int:
+    """Return the ordering index for a severity value."""
+    if isinstance(value, Severity):
+        return _ORDER_INDEX.get(value, len(_ORDER))
+    try:
+        level = Severity(value.lower())
+    except ValueError:
+        return len(_ORDER)
+    return _ORDER_INDEX.get(level, len(_ORDER))
