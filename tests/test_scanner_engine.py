@@ -1,6 +1,6 @@
-from uniscan.binaries import BinaryClassifier
-from uniscan.rules import load_ruleset
-from uniscan.scanner import ScanReport, Scanner, ScannerConfig
+from usentinel.binaries import BinaryClassifier
+from usentinel.rules import load_ruleset
+from usentinel.scanner import ScanReport, Scanner, ScannerConfig
 
 
 def make_scanner(include_binaries: bool = True) -> Scanner:

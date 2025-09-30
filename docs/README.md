@@ -1,14 +1,14 @@
-# Uniscan
+# Usentinel
 
-[![PyPI](https://img.shields.io/pypi/v/uniscan.svg?label=PyPI)](https://pypi.org/project/uniscan/)
+[![PyPI](https://img.shields.io/pypi/v/usentinel.svg?label=PyPI)](https://pypi.org/project/usentinel/)
 
-**Uniscan** is a **lightweight, read-only command-line interface (CLI) tool** designed to **audit Unity projects** for potentially hazardous code and native binaries. It provides static checks that highlight code patterns worth deeper inspection.
+**Usentinel** is a **lightweight, read-only command-line interface (CLI) tool** designed to **audit Unity projects** for potentially hazardous code and native binaries. It provides static checks that highlight code patterns worth deeper inspection.
 
 ### Key Features
 * **Static Code Analysis:** Scans C# scripts for common security vulnerabilities and anti-patterns.
 * **Binary Detection:** Identifies native binary files (e.g., `.dll`, `.so`, `.dylib`) which can sometimes pose a risk.
 * **Clear Summary Output:** Presents findings with severity and file locations so you can investigate quickly.
-* **Minimal Footprint:** Uniscan is read-only and has minimal runtime dependencies.
+* **Minimal Footprint:** Usentinel is read-only and has minimal runtime dependencies.
 
 ---
 
@@ -17,21 +17,21 @@
 Install from PyPI:
 
 ```bash
-pip install uniscan
+pip install usentinel
 ```
 
 Then scan your Unity project:
 
 ```bash
-uniscan /path/to/unity/project
+usentinel /path/to/unity/project
 ```
 
 Prefer working from source?
 
 ```bash
-git clone https://github.com/TLI-1994/Uniscan.git
-cd Uniscan
-PYTHONPATH=src python -m uniscan.main /path/to/unity/project
+git clone https://github.com/TLI-1994/Usentinel.git
+cd Usentinel
+PYTHONPATH=src python -m usentinel.main /path/to/unity/project
 ```
 
 Common flags:
@@ -44,7 +44,7 @@ Common flags:
 * `--engine {auto|heuristic|semgrep}` (default: `auto`) – auto-select, force the heuristic engine, or use Semgrep.
 * `--progress` / `--no-progress` (default: progress on) – toggle the live progress indicator.
 * `--pretty` / `--no-pretty` (default: grouped off) – group findings by file and rule for easier human review.
-* `--version` – print the installed Uniscan version and exit.
+* `--version` – print the installed Usentinel version and exit.
 
 > **Semgrep snippets:** When the Semgrep engine runs, `--verbosity debug` displays code snippets. For community rules, Semgrep returns snippets only if you run `semgrep login`; otherwise the placeholder `requires login` appears. Findings still include file paths and line numbers so you can review the code manually.
 
@@ -53,13 +53,13 @@ Each run reports which analysis engine was used (`semgrep` when available, other
 Example:
 
 ```bash
-uniscan ~/Projects/MyUnityGame --format json --skip-binaries
+usentinel ~/Projects/MyUnityGame --format json --skip-binaries
 ```
 
 ### Run the test suite (optional)
 
 ```bash
-pip install uniscan[test]
+pip install usentinel[test]
 python -m pytest
 ```
 
@@ -67,7 +67,7 @@ python -m pytest
 
 ## License
 
-MIT License — see [LICENSE](https://github.com/TLI-1994/Uniscan/blob/main/LICENSE) for details.
+MIT License — see [LICENSE](https://github.com/TLI-1994/Usentinel/blob/main/LICENSE) for details.
 
 ---
 
@@ -89,9 +89,9 @@ Commit the spec, generator, and regenerated YAML together so the rule bundle sta
 
 In addition to the MIT License notice, please keep the following in mind:
 
-* **Best-effort analysis:** Uniscan is a read-only static-analysis aid. It highlights patterns worth human review but it is not a substitute for a professional security audit, and it cannot detect every risky construct in the Unity ecosystem.
+* **Best-effort analysis:** Usentinel is a read-only static-analysis aid. It highlights patterns worth human review but it is not a substitute for a professional security audit, and it cannot detect every risky construct in the Unity ecosystem.
 * **Your responsibility:** You remain solely responsible for validating findings, performing additional due diligence, and complying with all applicable laws and regulations.
 * **No warranties:** The tool is provided “AS IS” without express or implied warranties, including but not limited to implied warranties of merchantability, fitness for a particular purpose, non-infringement, security, or error-free operation.
-* **No liability:** In no event shall the authors or contributors be liable for any direct, indirect, incidental, special, exemplary, or consequential damages arising out of or in connection with the use of Uniscan or reliance on its results. By using Uniscan you acknowledge these limitations and agree to hold the authors and contributors harmless.
+* **No liability:** In no event shall the authors or contributors be liable for any direct, indirect, incidental, special, exemplary, or consequential damages arising out of or in connection with the use of Usentinel or reliance on its results. By using Usentinel you acknowledge these limitations and agree to hold the authors and contributors harmless.
 
 Feedback and contributions are welcome. If you spot gaps in rule coverage or encounter issues, please open an issue or pull request on GitHub so we can improve together.

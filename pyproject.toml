@@ -3,8 +3,8 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "uniscan"
-version = "0.1.1"
+name = "usentinel"
+version = "0.2.0"
 description = "A lightweight CLI tool to audit Unity projects for risky code and binaries."
 readme = { file = "docs/README.md", content-type = "text/markdown" }
 license = { file = "LICENSE" }
@@ -38,12 +38,12 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/TLI-1994/Uniscan"
-Repository = "https://github.com/TLI-1994/Uniscan"
-Issues = "https://github.com/TLI-1994/Uniscan/issues"
+Homepage = "https://github.com/TLI-1994/Usentinel"
+Repository = "https://github.com/TLI-1994/Usentinel"
+Issues = "https://github.com/TLI-1994/Usentinel/issues"
 
 [project.scripts]
-uniscan = "uniscan.main:main"
+usentinel = "usentinel.main:main"
 
 [project.optional-dependencies]
 test = [
@@ -51,12 +51,12 @@ test = [
 ]
 
 [tool.setuptools]
-packages = ["uniscan", "uniscan_rules"]
-package-dir = { "uniscan" = "src/uniscan", "uniscan_rules" = "rules" }
+packages = ["usentinel", "usentinel_rules"]
+package-dir = { "usentinel" = "src/usentinel", "usentinel_rules" = "rules" }
 include-package-data = true
 
 [tool.setuptools.package-data]
-"uniscan_rules" = ["core/**/*.yaml"]
+"usentinel_rules" = ["core/**/*.yaml"]
 
 [tool.pytest.ini_options]
 markers = [

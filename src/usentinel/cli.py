@@ -1,4 +1,4 @@
-"""Command-line interface parsing utilities for Uniscan."""
+"""Command-line interface parsing utilities for Usentinel."""
 from __future__ import annotations
 
 import argparse
@@ -34,7 +34,7 @@ class CliOptions:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="uniscan",
+        prog="usentinel",
         description="Audit Unity projects for suspicious code and native binaries.",
     )
 

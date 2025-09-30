@@ -1,4 +1,4 @@
-"""Core scanning engine for Uniscan."""
+"""Core scanning engine for Usentinel."""
 from __future__ import annotations
 
 import os
@@ -223,7 +223,7 @@ class Scanner:
     def _maybe_init_semgrep_runner(self) -> SemgrepRunner | None:
         if self.config.use_semgrep is False:
             return None
-        if os.environ.get("UNISCAN_DISABLE_SEMGREP"):
+        if os.environ.get("USENTINEL_DISABLE_SEMGREP") or os.environ.get("UNISCAN_DISABLE_SEMGREP"):
             return None
         if not self._semgrep_sources:
             return None

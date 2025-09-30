@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from uniscan.rules import Ruleset, RuleLoadError, load_ruleset, load_semgrep_sources
+from usentinel.rules import Ruleset, RuleLoadError, load_ruleset, load_semgrep_sources
 
 
 def test_load_ruleset_includes_core_rules():

@@ -4,11 +4,11 @@ from typing import Sequence
 
 import pytest
 
-import uniscan.scanner as scanner_module
-from uniscan.binaries import BinaryClassifier
-from uniscan.rules import load_ruleset, load_semgrep_sources
-from uniscan.scanner import Scanner, ScannerConfig
-from uniscan.semgrep_runner import SemgrepRunner, SemgrepUnavailable
+import usentinel.scanner as scanner_module
+from usentinel.binaries import BinaryClassifier
+from usentinel.rules import load_ruleset, load_semgrep_sources
+from usentinel.scanner import Scanner, ScannerConfig
+from usentinel.semgrep_runner import SemgrepRunner, SemgrepUnavailable
 
 
 class _FailingRunner:
@@ -21,7 +21,7 @@ class _FailingRunner:
 
 def test_scanner_records_fallback_reason(monkeypatch, unity_project):
     message = "semgrep exploded"
-    monkeypatch.setenv("UNISCAN_DISABLE_SEMGREP", "")
+    monkeypatch.setenv("USENTINEL_DISABLE_SEMGREP", "")
 
     def fake_runner(_sources, jobs=None):
         return _FailingRunner(message)

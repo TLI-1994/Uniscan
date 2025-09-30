@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from uniscan.semgrep_runner import SemgrepRunner, SemgrepUnavailable
+from usentinel.semgrep_runner import SemgrepRunner, SemgrepUnavailable
 
 
 FIXTURE_RULE_DIR = Path("tests/fixtures/semgrep_comment_ignore/comment_rules")

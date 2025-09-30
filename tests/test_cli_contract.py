@@ -8,9 +8,9 @@ import pytest
 
 
 def run_cli(target: Path, *args: str) -> subprocess.CompletedProcess:
-    command = [sys.executable, "-m", "uniscan.main", str(target), *args]
+    command = [sys.executable, "-m", "usentinel.main", str(target), *args]
     env = os.environ.copy()
-    env.setdefault("UNISCAN_DISABLE_SEMGREP", "1")
+    env.setdefault("USENTINEL_DISABLE_SEMGREP", "1")
     return subprocess.run(command, capture_output=True, text=True, env=env)
 
 

@@ -3,10 +3,10 @@ from pathlib import Path
 
 import pytest
 
-from uniscan.cli import CliOptions
-from uniscan.main import run_scan
-from uniscan.rules import load_ruleset
-from uniscan.scanner import ScanReport
+from usentinel.cli import CliOptions
+from usentinel.main import run_scan
+from usentinel.rules import load_ruleset
+from usentinel.scanner import ScanReport
 
 
 @pytest.mark.parametrize(
@@ -33,7 +33,7 @@ def test_run_scan_respects_engine_flag(unity_project, monkeypatch, flag, expecte
         progress=True,
     )
 
-    monkeypatch.setenv("UNISCAN_DISABLE_SEMGREP", "1")
+    monkeypatch.setenv("USENTINEL_DISABLE_SEMGREP", "1")
     report = run_scan(options)
     assert isinstance(report, ScanReport)
     assert report.engine["name"] == expected

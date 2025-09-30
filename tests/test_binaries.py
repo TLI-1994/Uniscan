@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from uniscan.binaries import BinaryClassifier
+from usentinel.binaries import BinaryClassifier
 
 
 def test_classifier_detects_known_extensions(tmp_path):

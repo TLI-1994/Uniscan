@@ -143,7 +143,7 @@ class SemgrepRunner:
 
 
 def _resolve_semgrep_binary() -> str | None:
-    override = os.environ.get("UNISCAN_SEMGREP_BINARY")
+    override = os.environ.get("USENTINEL_SEMGREP_BINARY") or os.environ.get("UNISCAN_SEMGREP_BINARY")
     if override:
         override_path = Path(override)
         if override_path.exists() and os.access(override_path, os.X_OK):

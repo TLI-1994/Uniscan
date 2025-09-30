@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.0 - 2024-09-29
+### Highlights
+- Rebranded the project from Uniscan to Usentinel, including package, CLI command, and documentation updates.
+- Normalized severity handling to Semgrep’s Critical/High/Medium/Low scale and sorted findings by severity in both text and pretty output modes.
+
+### Packaging & Meta
+- Prepared PyPI metadata for `usentinel`, including updated rule bundle namespace.
+- Added environment variable fallbacks (`USENTINEL_DISABLE_SEMGREP`, `USENTINEL_SEMGREP_BINARY`) while retaining backward compatibility with the previous names.
+
 ## 0.1.1 - 2024-09-29
 ### Highlights
 - Added `-V/--version` flag to report the installed Uniscan version.

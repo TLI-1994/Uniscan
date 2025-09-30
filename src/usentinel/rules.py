@@ -1,4 +1,4 @@
-"""Rule loading and representation utilities for Uniscan."""
+"""Rule loading and representation utilities for Usentinel."""
 from __future__ import annotations
 
 from contextlib import contextmanager
@@ -188,7 +188,7 @@ def _rules_root() -> Iterator[Path]:
         return
 
     try:
-        rules_traversable = resources.files("uniscan_rules")
+        rules_traversable = resources.files("usentinel_rules")
     except ModuleNotFoundError as exc:  # pragma: no cover - packaging error
         raise RuleLoadError("Bundled rules are unavailable") from exc
 

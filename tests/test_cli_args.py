@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from uniscan.cli import CliOptions, build_parser, parse_args
+from usentinel.cli import CliOptions, build_parser, parse_args
 
 
 def test_parser_defines_expected_arguments():
@@ -64,7 +64,7 @@ def test_version_flag_prints_version(capsys):
         parser.parse_args(["--version"])
 
     captured = capsys.readouterr()
-    assert "uniscan" in captured.out
+    assert "usentinel" in captured.out
 
 
 @pytest.mark.parametrize("flag", ["--quiet", "--debug"])
