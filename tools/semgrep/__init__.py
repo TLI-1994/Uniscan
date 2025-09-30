@@ -1,1 +1,0 @@
-"""Semgrep rule generation utilities."""

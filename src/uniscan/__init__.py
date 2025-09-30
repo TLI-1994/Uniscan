@@ -1,12 +1,15 @@
-"""Uniscan package exports."""
+"""Compatibility shim for the deprecated `uniscan` package."""
+from __future__ import annotations
 
-from importlib import metadata
+import warnings
 
-try:  # pragma: no cover - metadata lookup depends on installation context
-    __version__ = metadata.version("uniscan")
-except metadata.PackageNotFoundError:  # pragma: no cover - source tree fallback
-    __version__ = "0.0.dev0"
+from usentinel import *  # noqa: F401,F403
 
-from .main import main
+warnings.warn(
+    "The `uniscan` package has been renamed to `usentinel`. Please update your "
+    "dependencies to use `usentinel` directly.",
+    DeprecationWarning,
+    stacklevel=2,
+)
 
-__all__ = ["main", "__version__"]
+__all__ = [name for name in globals() if not name.startswith("_")]

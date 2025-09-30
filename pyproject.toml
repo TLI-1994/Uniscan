@@ -4,61 +4,33 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "uniscan"
-version = "0.1.1"
-description = "A lightweight CLI tool to audit Unity projects for risky code and binaries."
-readme = { file = "docs/README.md", content-type = "text/markdown" }
+version = "0.2.0"
+description = "Redirect package for the renamed Usentinel project."
+readme = "README.md"
 license = { file = "LICENSE" }
 requires-python = ">=3.8"
 authors = [
     { name = "Tianjiao Li" }
 ]
-keywords = [
-    "unity",
-    "security",
-    "static-analysis",
-    "cli",
-]
-
 classifiers = [
-    "Development Status :: 3 - Alpha",
-    "Environment :: Console",
-    "Intended Audience :: Developers",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3 :: Only",
+    "Development Status :: 7 - Inactive",
     "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
-    "Topic :: Security",
-    "Topic :: Software Development :: Quality Assurance",
+    "Programming Language :: Python :: 3",
 ]
 
 dependencies = [
-    "semgrep>=1.72.0",
-    "PyYAML>=6.0",
-    "certifi>=2023.0",
+    "usentinel>=0.2.0",
 ]
 
 [project.urls]
-Homepage = "https://github.com/TLI-1994/Uniscan"
-Repository = "https://github.com/TLI-1994/Uniscan"
-Issues = "https://github.com/TLI-1994/Uniscan/issues"
+Homepage = "https://github.com/TLI-1994/Usentinel"
+Repository = "https://github.com/TLI-1994/Usentinel"
+Issues = "https://github.com/TLI-1994/Usentinel/issues"
 
 [project.scripts]
-uniscan = "uniscan.main:main"
+uniscan = "usentinel.main:main"
 
-[project.optional-dependencies]
-test = [
-    "pytest>=7.0",
-]
 
 [tool.setuptools]
-packages = ["uniscan", "uniscan_rules"]
-package-dir = { "uniscan" = "src/uniscan", "uniscan_rules" = "rules" }
-include-package-data = true
-
-[tool.setuptools.package-data]
-"uniscan_rules" = ["core/**/*.yaml"]
-
-[tool.pytest.ini_options]
-markers = [
-    "integration: marks tests that invoke CLI end to end",
-]
+packages = ["uniscan"]
+package-dir = { "uniscan" = "src/uniscan" }
