@@ -23,14 +23,11 @@ def test_run_scan_respects_engine_flag(unity_project, monkeypatch, flag, expecte
     # Build options mimicking CLI parsing
     options = CliOptions(
         target=project,
-        format="json",
+        format="raw",
         ruleset=(),
-        no_colors=True,
         include_binaries=False,
         skip_binaries=True,
-        verbosity="normal",
         semgrep=flag,
-        progress=True,
     )
 
     monkeypatch.setenv("USENTINEL_DISABLE_SEMGREP", "1")

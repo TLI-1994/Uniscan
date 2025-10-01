@@ -14,13 +14,10 @@ def test_parser_defines_expected_arguments():
         "target",
         "format",
         "ruleset",
-        "no_colors",
         "output",
         "include_binaries",
         "skip_binaries",
-        "verbosity",
         "engine",
-        "progress",
         "version",
     }:
         assert expected in options
@@ -39,19 +36,15 @@ def test_mutually_exclusive_binary_flags():
 
 
 def test_parse_args_returns_cli_options():
-    args = parse_args(["/tmp/project", "--format", "json", "--no-colors"])
+    args = parse_args(["/tmp/project", "--format", "raw"])
 
     assert isinstance(args, CliOptions)
     assert args.target == Path("/tmp/project")
-    assert args.format == "json"
+    assert args.format == "raw"
     assert args.output is None
-    assert args.no_colors is True
     assert args.include_binaries is True
     assert args.skip_binaries is False
-    assert args.verbosity == "normal"
     assert args.semgrep == "auto"
-    assert args.progress is True
-    assert args.pretty is False
 
 
 def test_parser_rejects_invalid_format():
@@ -67,6 +60,12 @@ def test_parse_args_accepts_output_path():
     assert args.output == Path("report.html")
 
 
+def test_parse_args_normalizes_json_alias():
+    args = parse_args(["/tmp", "--format", "json"])
+
+    assert args.format == "raw"
+
+
 def test_version_flag_prints_version(capsys):
     parser = build_parser()
     with pytest.raises(SystemExit):
@@ -74,31 +73,12 @@ def test_version_flag_prints_version(capsys):
 
     captured = capsys.readouterr()
     assert "usentinel" in captured.out
-
-
-@pytest.mark.parametrize("flag", ["--quiet", "--debug"])
-def test_shorthand_verbosity_flags(flag):
-    args = parse_args(["/tmp", flag])
-    expected = "quiet" if flag == "--quiet" else "debug"
-    assert args.verbosity == expected
-
-
 def test_engine_flag_can_select_semgrep():
     args = parse_args(["/tmp", "--engine", "semgrep"])
     assert args.semgrep == "semgrep"
-
-
-def test_progress_flag_enables_progress():
-    args = parse_args(["/tmp", "--progress"])
-    assert args.progress is True
 
 
 def test_skip_binaries_flag_disables_inclusion():
     args = parse_args(["/tmp", "--skip-binaries"])
     assert args.include_binaries is False
     assert args.skip_binaries is True
-
-
-def test_pretty_flag_enables_grouped_output():
-    args = parse_args(["/tmp", "--pretty"])
-    assert args.pretty is True

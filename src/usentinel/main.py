@@ -6,8 +6,7 @@ import re
 from datetime import datetime
 import hashlib
 from pathlib import Path
-from collections import defaultdict
-from typing import Any, Sequence
+from typing import Any
 
 from importlib import resources as importlib_resources
 from jinja2 import Environment, select_autoescape
@@ -15,7 +14,7 @@ from jinja2 import Environment, select_autoescape
 from .binaries import BinaryClassifier
 from .cli import CliOptions, parse_args
 from .rules import RuleLoadError, load_ruleset, load_semgrep_sources
-from .scanner import Finding, ScanReport, Scanner, ScannerConfig
+from .scanner import ScanReport, Scanner, ScannerConfig
 from .severity import ORDERED_SEVERITIES, severity_sort_key
 
 EXIT_OK = 0
@@ -23,14 +22,6 @@ EXIT_USAGE = 2
 EXIT_FS_ERROR = 3
 EXIT_RULE_ERROR = 4
 EXIT_FAILURE = 1
-
-_RESET = "\x1b[0m"
-_COLORS = {
-    "low": "\x1b[34m",      # blue
-    "medium": "\x1b[33m",   # yellow
-    "high": "\x1b[31m",     # red
-    "critical": "\x1b[35m",  # magenta
-}
 
 def _load_html_template() -> str:
     template_resource = importlib_resources.files("usentinel.templates") / "report.html"
@@ -79,13 +70,11 @@ def main(argv: list[str] | None = None) -> int:
         _print_error(f"Unexpected error: {exc}")
         return EXIT_FAILURE
 
-    if options.format == "json":
+    if options.format == "raw":
         print(_report_to_json(report, options))
-    elif options.format == "html":
+    else:
         output_path = _write_html_report(report, options)
         print(f"HTML report written to {output_path}")
-    else:
-        print(_report_to_text(report, options))
 
     return EXIT_OK
 
@@ -101,7 +90,6 @@ def run_scan(options: CliOptions) -> ScanReport:
         include_binaries=should_include_binaries,
         skip_binaries=options.skip_binaries,
         use_semgrep=_map_engine_choice(options.semgrep),
-        show_progress=options.progress,
     )
 
     scanner = Scanner(
@@ -147,165 +135,9 @@ def _report_to_json(report: ScanReport, options: CliOptions) -> str:
             for binary in report.binaries
         ],
     }
-    return json.dumps(payload, indent=2 if options.verbosity == "debug" else None)
+    return json.dumps(payload, indent=2)
 
 
-def _report_to_text(report: ScanReport, options: CliOptions) -> str:
-    lines = [f"Scan target: {report.target}"]
-    engine_name = str(report.engine.get("name", "unknown"))
-    fallback = report.engine.get("fallback_reason")
-    if fallback:
-        fallback_str = str(fallback)
-        lines.append(f"Analysis engine: {engine_name} (fallback: {fallback_str})")
-    else:
-        lines.append(f"Analysis engine: {engine_name}")
-
-    counts = report.summary.get("findings", {})
-    lines.append(
-        "Findings: total={total} critical={critical} high={high} medium={medium} low={low}".format(
-            total=counts.get("total", 0),
-            critical=counts.get("critical", 0),
-            high=counts.get("high", 0),
-            medium=counts.get("medium", 0),
-            low=counts.get("low", 0),
-        )
-    )
-    if report.summary.get("binaries"):
-        lines.append(f"Native binaries detected: {report.summary['binaries']}")
-
-    lines.extend(_format_findings_text(report.findings, options))
-
-    return "\n".join(lines)
-
-
-def _format_findings_text(findings: Sequence[Finding], options: CliOptions) -> list[str]:
-    if options.verbosity == "quiet":
-        return []
-
-    if options.pretty:
-        return _format_grouped_findings(findings, options)
-
-    sorted_findings = sorted(
-        findings,
-        key=lambda f: (
-            severity_sort_key(f.severity),
-            f.rule_id,
-            str(f.path),
-            f.line or 0,
-        ),
-    )
-
-    colorize = not options.no_colors
-    lines: list[str] = []
-    for finding in sorted_findings:
-        rule_display, severity_text = _decorate_rule_and_severity(
-            finding.rule_id, finding.severity, colorize
-        )
-        location = f"{finding.path}:{finding.line}" if finding.line else str(finding.path)
-        snippet = _format_snippet(finding.snippet, options)
-
-        lines.append(f"[{rule_display}] {severity_text} - {finding.message} ({location}){snippet}")
-
-    return lines
-
-
-def _severity_color(severity: str) -> str | None:
-    return _COLORS.get(severity.lower())
-
-
-def _decorate_rule_and_severity(rule_id: str, severity: str, colorize: bool) -> tuple[str, str]:
-    severity_text = severity.upper()
-    if not colorize:
-        return rule_id, severity_text
-
-    color = _severity_color(severity)
-    if not color:
-        return rule_id, severity_text
-
-    return f"{color}{rule_id}{_RESET}", f"{color}{severity_text}{_RESET}"
-
-
-def _format_snippet(snippet: str | None, options: CliOptions) -> str:
-    if options.verbosity != "debug" or not snippet:
-        return ""
-    return f" \u2014 {snippet}"
-
-
-def _format_grouped_findings(findings: Sequence[Finding], options: CliOptions) -> list[str]:
-    colorize = not options.no_colors
-    debug = options.verbosity == "debug"
-
-    by_file: dict[str, dict[str, list[Finding]]] = defaultdict(lambda: defaultdict(list))
-    for finding in findings:
-        by_file[str(finding.path)][finding.rule_id].append(finding)
-
-    file_severity_rank: dict[str, int] = {}
-    for file_path, rule_map in by_file.items():
-        best = min(
-            severity_sort_key(finding.severity)
-            for group in rule_map.values()
-            for finding in group
-        )
-        file_severity_rank[file_path] = best
-
-    ordered_files = sorted(
-        by_file.keys(), key=lambda path: (file_severity_rank[path], path)
-    )
-
-    lines: list[str] = []
-    for file_index, file_path in enumerate(ordered_files):
-        if file_index > 0:
-            lines.append("")
-        lines.append(file_path)
-
-        rule_map = by_file[file_path]
-        severity_counts: dict[str, int] = {}
-        for group in rule_map.values():
-            for finding in group:
-                severity_counts[finding.severity] = severity_counts.get(finding.severity, 0) + 1
-
-        summary_parts = [
-            f"{level}:{severity_counts[level]}"
-            for level in ORDERED_SEVERITIES
-            if severity_counts.get(level)
-        ]
-        if summary_parts:
-            lines.append("  Severity summary: " + ", ".join(summary_parts))
-
-        for rule_id in sorted(
-            rule_map.keys(),
-            key=lambda rid: (
-                severity_sort_key(rule_map[rid][0].severity),
-                rid,
-            ),
-        ):
-            group = rule_map[rule_id]
-            exemplar = group[0]
-            rule_display, severity_text = _decorate_rule_and_severity(rule_id, exemplar.severity, colorize)
-            message = exemplar.message
-
-            line_numbers = sorted({f.line for f in group if f.line is not None})
-            if line_numbers:
-                displayed = ", ".join(str(num) for num in line_numbers[:10])
-                if len(line_numbers) > 10:
-                    displayed += ", …"
-                line_info = f"lines {displayed}"
-            else:
-                line_info = "lines n/a"
-            if len(group) > len(line_numbers):
-                line_info += f" ({len(group)} matches)"
-
-            snippet_text = ""
-            if debug:
-                snippets = [f.snippet for f in group if f.snippet]
-                if snippets:
-                    snippet_text = f" \u2014 {snippets[0]}"
-                    if len(snippets) > 1:
-                        snippet_text += f" (+{len(snippets) - 1} more)"
-
-            lines.append(f"  [{rule_display}] {severity_text} - {message} ({line_info}){snippet_text}")
-
-    return lines
 
 
 def _print_error(message: str) -> None:

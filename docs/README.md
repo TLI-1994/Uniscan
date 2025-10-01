@@ -26,6 +26,8 @@ Then scan your Unity project:
 usentinel /path/to/unity/project
 ```
 
+Each scan writes a polished HTML report to the current directory (for example `usentinel-report-myproject-20240518-172455-a1b2c3d4.html`). Open it in your browser, or pass a folder to `--output` to place reports elsewhere.
+
 Prefer working from source?
 
 ```bash
@@ -36,34 +38,26 @@ PYTHONPATH=src python -m usentinel.main /path/to/unity/project
 
 Common flags:
 
-* `--format {text|json|html}` (default: `text`) – pick between console text, JSON, or a browser-ready HTML report with severity highlights.
-* `--output PATH` – when used with `--format html`, write to the given file or directory (defaults to a timestamped `usentinel-report-<project>-YYYYMMDD-HHMMSS-<hash>.html`).
-* `--no-colors` (default: off) – disable ANSI colours in text mode.
+* `--format {html|raw}` (default: `html`) – open-friendly HTML or raw JSON for automation (`json` is accepted as an alias for `raw`).
+* `--output PATH` – when using HTML, write to a specific file or directory (defaults to `usentinel-report-<project>-YYYYMMDD-HHMMSS-<hash>.html`).
 * `--ruleset path/to/extra_rules.yaml` – load additional Semgrep-style YAML rules (repeatable).
 * `--include-binaries` / `--skip-binaries` (default: include) – control native binary detection.
-* `--verbosity {quiet|normal|debug}` (default: `normal`) – adjust the amount of detail (`--quiet` / `--debug` aliases).
 * `--engine {auto|heuristic|semgrep}` (default: `auto`) – auto-select, force the heuristic engine, or use Semgrep.
-* `--progress` / `--no-progress` (default: progress on) – toggle the live progress indicator.
-* `--pretty` / `--no-pretty` (default: grouped off) – group findings by file and rule for easier human review.
 * `--version` – print the installed Usentinel version and exit.
 
-> **Semgrep snippets:** When the Semgrep engine runs, `--verbosity debug` displays code snippets. For community rules, Semgrep returns snippets only if you run `semgrep login`; otherwise the placeholder `requires login` appears. Findings still include file paths and line numbers so you can review the code manually.
+> **Semgrep snippets:** When the Semgrep engine runs, matching lines appear in the HTML and raw JSON when available. For community rules, Semgrep returns snippets only if you run `semgrep login`; otherwise the placeholder `requires login` appears. Findings still include file paths and line numbers so you can review the code manually.
+
+Progress indicators show automatically when Usentinel runs in an interactive terminal and stay quiet when output is redirected, so you can safely pipe results into other tools without extra flags.
 
 Each run reports which analysis engine was used (`semgrep` when available, otherwise a heuristic fallback) so you can confirm coverage.
 
-Example:
+Prefer raw JSON? Swap the format flag:
 
 ```bash
-usentinel ~/Projects/MyUnityGame --format json --skip-binaries
+usentinel ~/Projects/MyUnityGame --format raw
 ```
 
-To generate a shareable report you can open in a browser:
-
-```bash
-usentinel ~/Projects/MyUnityGame --format html
-```
-
-Usentinel will create a uniquely named HTML file such as `usentinel-report-myunitygame-20240518-172455-a1b2c3d4.html` in the working directory (or use `--output ~/Reports` to place it elsewhere).
+The JSON output mirrors the HTML report data so you can integrate it with other tools or pipelines.
 
 ### Run the test suite (contributors)
 

@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import argparse
-import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable, Sequence
@@ -10,10 +9,8 @@ from typing import Iterable, Sequence
 from . import __version__
 
 
-DEFAULT_FORMAT = "text"
-DEFAULT_VERBOSITY = "normal"
-VALID_FORMATS = {"text", "json", "html"}
-VALID_VERBOSITY = {"quiet", "normal", "debug"}
+DEFAULT_FORMAT = "html"
+VALID_FORMATS = {"html", "raw", "json"}
 
 
 @dataclass(frozen=True)
@@ -24,13 +21,9 @@ class CliOptions:
     format: str = DEFAULT_FORMAT
     output: Path | None = None
     ruleset: tuple[Path, ...] = ()
-    no_colors: bool = False
     include_binaries: bool = True
     skip_binaries: bool = False
-    verbosity: str = DEFAULT_VERBOSITY
     semgrep: str = "auto"
-    progress: bool = True
-    pretty: bool = False
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -56,7 +49,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--format",
         choices=sorted(VALID_FORMATS),
         default=DEFAULT_FORMAT,
-        help="Output format (text, json, or html)",
+        help="Output format (html or raw)",
     )
 
     parser.add_argument(
@@ -72,12 +65,6 @@ def build_parser() -> argparse.ArgumentParser:
         type=Path,
         default=None,
         help="Additional rule YAML files to load",
-    )
-
-    parser.add_argument(
-        "--no-colors",
-        action="store_true",
-        help="Disable ANSI colors in text output",
     )
 
     binary_group = parser.add_mutually_exclusive_group()
@@ -96,60 +83,10 @@ def build_parser() -> argparse.ArgumentParser:
     parser.set_defaults(include_binaries=None, skip_binaries=False)
 
     parser.add_argument(
-        "--verbosity",
-        choices=sorted(VALID_VERBOSITY),
-        default=DEFAULT_VERBOSITY,
-        help="Adjust log verbosity",
-    )
-
-    parser.add_argument(
         "--engine",
         choices=["auto", "semgrep", "heuristic"],
         default="auto",
         help="Select analysis engine (default: auto)",
-    )
-
-    parser.add_argument(
-        "--pretty",
-        dest="pretty",
-        action="store_true",
-        help="Group findings by file and rule for easier reading",
-    )
-    parser.add_argument(
-        "--no-pretty",
-        dest="pretty",
-        action="store_false",
-        help="Disable grouped output (default)",
-    )
-    parser.set_defaults(pretty=False)
-
-    parser.add_argument(
-        "--progress",
-        dest="progress",
-        action="store_true",
-        help="Show a live progress indicator during scanning",
-    )
-    parser.add_argument(
-        "--no-progress",
-        dest="progress",
-        action="store_false",
-        help="Disable the progress indicator",
-    )
-    parser.set_defaults(progress=True)
-
-    parser.add_argument(
-        "--quiet",
-        action="store_const",
-        const="quiet",
-        dest="verbosity",
-        help="Alias for --verbosity quiet",
-    )
-    parser.add_argument(
-        "--debug",
-        action="store_const",
-        const="debug",
-        dest="verbosity",
-        help="Alias for --verbosity debug",
     )
 
     return parser
@@ -173,16 +110,18 @@ def parse_args(argv: Sequence[str]) -> CliOptions:
 
     options = CliOptions(
         target=namespace.target,
-        format=namespace.format,
+        format=_normalize_format(namespace.format),
         output=namespace.output,
         ruleset=tuple(ruleset_paths),
-        no_colors=namespace.no_colors,
         include_binaries=include_binaries,
         skip_binaries=skip_binaries,
-        verbosity=namespace.verbosity,
         semgrep=namespace.engine,
-        progress=namespace.progress,
-        pretty=namespace.pretty,
     )
 
     return options
+
+
+def _normalize_format(value: str) -> str:
+    if value == "json":
+        return "raw"
+    return value

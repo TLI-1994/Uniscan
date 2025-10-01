@@ -41,7 +41,6 @@ class ScannerConfig:
     skip_binaries: bool = False
     allowed_dirs: tuple[str, ...] = ("Assets", "Packages", "ProjectSettings")
     use_semgrep: bool | None = None  # None = auto detect
-    show_progress: bool = False
     max_workers: int | None = None
 
     def binaries_enabled(self) -> bool:
@@ -92,7 +91,7 @@ class Scanner:
         total_progress = len(csharp_files)
         if self.config.binaries_enabled():
             total_progress += len(other_files)
-        progress = _ProgressPrinter(self.config.show_progress, total_progress)
+        progress = _ProgressPrinter(total_progress)
 
         semgrep_phase = self._semgrep_runner is not None and csharp_files
         if semgrep_phase:
@@ -368,8 +367,9 @@ def _relativize_paths(project_root: Path, files: Sequence[Path]) -> list[Path]:
 class _ProgressPrinter:
     _SPINNER = "|/-\\"
 
-    def __init__(self, enabled: bool, total: int) -> None:
-        self.enabled = enabled and total > 0
+    def __init__(self, total: int) -> None:
+        tty = sys.stdout.isatty()
+        self.enabled = total > 0 and tty
         self.total = max(total, 1)
         self.current = 0
         self._last = ""
