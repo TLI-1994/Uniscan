@@ -211,8 +211,10 @@
                   {{ finding.path_display }}
                 {% endif %}
               </div>
-              {% if finding.snippet %}
-              <pre>{{ finding.snippet }}</pre>
+              {% if finding.snippet_html %}
+              <pre class="code-snippet">{{ finding.snippet_html }}</pre>
+              {% elif finding.snippet_text %}
+              <pre class="code-snippet">{{ finding.snippet_text }}</pre>
               {% endif %}
             </td>
           </tr>

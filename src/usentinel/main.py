@@ -3,12 +3,14 @@ from __future__ import annotations
 import json
 import sys
 import re
+import textwrap
 from datetime import datetime
 import hashlib
 from pathlib import Path
 from typing import Any
 
 from importlib import resources as importlib_resources
+from markupsafe import Markup
 from jinja2 import Environment, select_autoescape
 
 from .binaries import BinaryClassifier
@@ -16,6 +18,10 @@ from .cli import CliOptions, parse_args
 from .rules import RuleLoadError, load_ruleset, load_semgrep_sources
 from .scanner import ScanReport, Scanner, ScannerConfig
 from .severity import ORDERED_SEVERITIES, severity_sort_key
+from pygments import highlight
+from pygments.formatters import HtmlFormatter
+from pygments.lexers import get_lexer_by_name
+from pygments.util import ClassNotFound
 
 EXIT_OK = 0
 EXIT_USAGE = 2
@@ -29,6 +35,10 @@ def _load_html_template() -> str:
 
 _HTML_ENV = Environment(autoescape=select_autoescape(["html", "xml"]))
 _HTML_TEMPLATE_OBJ = _HTML_ENV.from_string(_load_html_template())
+
+
+_LEXER_NAME = "csharp"
+_HTML_FORMATTER = HtmlFormatter(nowrap=True, noclasses=True)
 
 
 def _generate_report_filename(report: ScanReport, when: datetime) -> str:
@@ -178,6 +188,7 @@ def _report_to_html(report: ScanReport) -> str:
     ):
         link = _file_uri(finding.path, finding.line)
         line_display = f" (line {finding.line})" if finding.line else ""
+        snippet_rendered = _format_snippet(finding.snippet) if finding.snippet else None
         findings.append(
             {
                 "rule_id": finding.rule_id,
@@ -186,7 +197,8 @@ def _report_to_html(report: ScanReport) -> str:
                 "message": finding.message,
                 "path_display": f"{finding.path}{line_display}",
                 "link": link,
-                "snippet": finding.snippet,
+                "snippet_html": snippet_rendered,
+                "snippet_text": finding.snippet,
             }
         )
 
@@ -216,6 +228,22 @@ def _report_to_html(report: ScanReport) -> str:
     }
 
     return _HTML_TEMPLATE_OBJ.render(context)
+
+
+def _format_snippet(snippet: str) -> Markup | None:
+    snippet_text = textwrap.dedent(snippet or "").strip("\n")
+    if not snippet_text:
+        return None
+
+    try:
+        lexer = get_lexer_by_name(_LEXER_NAME)
+    except ClassNotFound:  # pragma: no cover - pygments missing language
+        from pygments.lexers.special import TextLexer
+
+        lexer = TextLexer()
+
+    highlighted = highlight(snippet_text, lexer, _HTML_FORMATTER)
+    return Markup(highlighted.strip())
 
 
 def _file_uri(path: Path, line: int | None) -> str | None:
