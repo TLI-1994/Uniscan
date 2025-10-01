@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Usentinel Scan Report</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+      body {
+        margin: 0;
+        padding: 2rem;
+        background: #f8f9fb;
+        color: #1b1d21;
+      }
+      header {
+        max-width: 960px;
+        margin: 0 auto 2rem;
+        text-align: center;
+      }
+      h1 {
+        margin: 0 0 0.25rem;
+        font-size: 2rem;
+      }
+      h2 {
+        margin-top: 2rem;
+        font-size: 1.4rem;
+      }
+      .meta {
+        color: #4d5561;
+        font-size: 0.95rem;
+        margin: 0.25rem 0;
+      }
+      .summary {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin: 1.5rem 0;
+      }
+      .summary-card {
+        flex: 1 1 140px;
+        min-width: 140px;
+        padding: 1rem;
+        border-radius: 12px;
+        background: white;
+        box-shadow: 0 6px 20px rgba(44, 63, 87, 0.08);
+        border: 1px solid transparent;
+      }
+      .summary-card .label {
+        font-size: 0.85rem;
+        color: #4d5561;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+      .summary-card .value {
+        font-size: 1.75rem;
+        font-weight: 600;
+        margin-top: 0.35rem;
+      }
+      .summary-card.highlight {
+        box-shadow: 0 8px 24px rgba(44, 63, 87, 0.12);
+      }
+      .summary-card.highlight.severity-critical {
+        background: rgba(178, 37, 95, 0.12);
+        border-color: rgba(178, 37, 95, 0.35);
+      }
+      .summary-card.highlight.severity-critical .label,
+      .summary-card.highlight.severity-critical .value {
+        color: #b2255f;
+      }
+      .summary-card.highlight.severity-high {
+        background: rgba(217, 95, 2, 0.12);
+        border-color: rgba(217, 95, 2, 0.35);
+      }
+      .summary-card.highlight.severity-high .label,
+      .summary-card.highlight.severity-high .value {
+        color: #d95f02;
+      }
+      .summary-card.highlight.severity-medium {
+        background: rgba(230, 167, 0, 0.14);
+        border-color: rgba(230, 167, 0, 0.35);
+      }
+      .summary-card.highlight.severity-medium .label,
+      .summary-card.highlight.severity-medium .value {
+        color: #b67d00;
+      }
+      .summary-card.highlight.severity-low {
+        background: rgba(31, 119, 180, 0.12);
+        border-color: rgba(31, 119, 180, 0.35);
+      }
+      .summary-card.highlight.severity-low .label,
+      .summary-card.highlight.severity-low .value {
+        color: #1f77b4;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1rem;
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 16px rgba(44, 63, 87, 0.08);
+      }
+      th, td {
+        padding: 0.85rem 1rem;
+        text-align: left;
+        border-bottom: 1px solid #e4e7ec;
+        vertical-align: top;
+      }
+      th {
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #4d5561;
+        background: #f0f2f6;
+      }
+      tbody tr:last-child td {
+        border-bottom: none;
+      }
+      .severity-pill {
+        display: inline-block;
+        padding: 0.35rem 0.75rem;
+        border-radius: 999px;
+        font-weight: 600;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+      }
+      .severity-pill.critical { background: rgba(178, 37, 95, 0.12); color: #b2255f; }
+      .severity-pill.high { background: rgba(217, 95, 2, 0.15); color: #d95f02; }
+      .severity-pill.medium { background: rgba(230, 167, 0, 0.15); color: #b67d00; }
+      .severity-pill.low { background: rgba(31, 119, 180, 0.15); color: #1f77b4; }
+      .finding-message {
+        font-weight: 600;
+        margin-bottom: 0.35rem;
+      }
+      .finding-meta {
+        font-size: 0.9rem;
+        color: #4d5561;
+      }
+      pre {
+        background: #121a27;
+        color: #f5f7fb;
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        max-height: 180px;
+        overflow: auto;
+        margin-top: 0.75rem;
+      }
+      a {
+        color: inherit;
+      }
+      footer {
+        margin-top: 3rem;
+        font-size: 0.85rem;
+        color: #6b7283;
+      }
+      @media (max-width: 768px) {
+        body { padding: 1rem; }
+        table { font-size: 0.95rem; }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Usentinel Scan Report</h1>
+      <p class="meta">Target: {{ target }}</p>
+      <p class="meta">Generated: {{ generated_at }}</p>
+      <p class="meta">Engine: {{ engine.name }}{% if engine.fallback_reason %} (fallback: {{ engine.fallback_reason }}){% endif %}</p>
+    </header>
+
+    <section class="summary">
+      <div class="summary-card">
+        <div class="label">Total Findings</div>
+        <div class="value">{{ findings_total }}</div>
+      </div>
+      {% for severity in severities %}
+      <div class="summary-card{% if severity.has_findings %} highlight {{ severity.css_class }}{% endif %}">
+        <div class="label">{{ severity.label }}</div>
+        <div class="value">{{ severity.count }}</div>
+      </div>
+      {% endfor %}
+      <div class="summary-card">
+        <div class="label">Native Binaries</div>
+        <div class="value">{{ binaries_total }}</div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Findings</h2>
+      {% if findings %}
+      <table>
+        <thead>
+          <tr>
+            <th>Severity</th>
+            <th>Rule</th>
+            <th>Details</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for finding in findings %}
+          <tr>
+            <td><span class="severity-pill {{ finding.css_class }}">{{ finding.severity }}</span></td>
+            <td>{{ finding.rule_id }}</td>
+            <td>
+              <div class="finding-message">{{ finding.message }}</div>
+              <div class="finding-meta">
+                {% if finding.link %}
+                  <a href="{{ finding.link }}">{{ finding.path_display }}</a>
+                {% else %}
+                  {{ finding.path_display }}
+                {% endif %}
+              </div>
+              {% if finding.snippet %}
+              <pre>{{ finding.snippet }}</pre>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p>No findings detected.</p>
+      {% endif %}
+    </section>
+
+    <section>
+      <h2>Native Binaries</h2>
+      {% if binaries %}
+      <table>
+        <thead>
+          <tr>
+            <th>Path</th>
+            <th>Kind</th>
+            <th>Size (bytes)</th>
+            <th>Magic</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for binary in binaries %}
+          <tr>
+            <td>{{ binary.path }}</td>
+            <td>{{ binary.kind }}</td>
+            <td>{{ binary.size }}</td>
+            <td>{{ binary.magic }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p>No native binaries detected.</p>
+      {% endif %}
+    </section>
+
+    <footer>
+      Generated by <a href="https://pypi.org/project/usentinel/" target="_blank" rel="noopener noreferrer">Usentinel</a>.
+    </footer>
+  </body>
+</html>

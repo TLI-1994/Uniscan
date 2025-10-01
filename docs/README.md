@@ -36,7 +36,8 @@ PYTHONPATH=src python -m usentinel.main /path/to/unity/project
 
 Common flags:
 
-* `--format {text|json}` (default: `text`) – choose human-readable or machine-readable output.
+* `--format {text|json|html}` (default: `text`) – pick between console text, JSON, or a browser-ready HTML report with severity highlights.
+* `--output PATH` – when used with `--format html`, write to the given file or directory (defaults to a timestamped `usentinel-report-<project>-YYYYMMDD-HHMMSS-<hash>.html`).
 * `--no-colors` (default: off) – disable ANSI colours in text mode.
 * `--ruleset path/to/extra_rules.yaml` – load additional Semgrep-style YAML rules (repeatable).
 * `--include-binaries` / `--skip-binaries` (default: include) – control native binary detection.
@@ -55,6 +56,14 @@ Example:
 ```bash
 usentinel ~/Projects/MyUnityGame --format json --skip-binaries
 ```
+
+To generate a shareable report you can open in a browser:
+
+```bash
+usentinel ~/Projects/MyUnityGame --format html
+```
+
+Usentinel will create a uniquely named HTML file such as `usentinel-report-myunitygame-20240518-172455-a1b2c3d4.html` in the working directory (or use `--output ~/Reports` to place it elsewhere).
 
 ### Run the test suite (contributors)
 

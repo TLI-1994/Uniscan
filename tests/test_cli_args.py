@@ -15,6 +15,7 @@ def test_parser_defines_expected_arguments():
         "format",
         "ruleset",
         "no_colors",
+        "output",
         "include_binaries",
         "skip_binaries",
         "verbosity",
@@ -43,6 +44,7 @@ def test_parse_args_returns_cli_options():
     assert isinstance(args, CliOptions)
     assert args.target == Path("/tmp/project")
     assert args.format == "json"
+    assert args.output is None
     assert args.no_colors is True
     assert args.include_binaries is True
     assert args.skip_binaries is False
@@ -56,6 +58,13 @@ def test_parser_rejects_invalid_format():
     parser = build_parser()
     with pytest.raises(SystemExit):
         parser.parse_args(["/tmp", "--format", "xml"])
+
+
+def test_parse_args_accepts_output_path():
+    args = parse_args(["/tmp", "--format", "html", "--output", "report.html"])
+
+    assert args.format == "html"
+    assert args.output == Path("report.html")
 
 
 def test_version_flag_prints_version(capsys):

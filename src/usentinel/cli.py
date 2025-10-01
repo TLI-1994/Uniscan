@@ -12,7 +12,7 @@ from . import __version__
 
 DEFAULT_FORMAT = "text"
 DEFAULT_VERBOSITY = "normal"
-VALID_FORMATS = {"text", "json"}
+VALID_FORMATS = {"text", "json", "html"}
 VALID_VERBOSITY = {"quiet", "normal", "debug"}
 
 
@@ -22,6 +22,7 @@ class CliOptions:
 
     target: Path
     format: str = DEFAULT_FORMAT
+    output: Path | None = None
     ruleset: tuple[Path, ...] = ()
     no_colors: bool = False
     include_binaries: bool = True
@@ -55,7 +56,14 @@ def build_parser() -> argparse.ArgumentParser:
         "--format",
         choices=sorted(VALID_FORMATS),
         default=DEFAULT_FORMAT,
-        help="Output format (text or json)",
+        help="Output format (text, json, or html)",
+    )
+
+    parser.add_argument(
+        "--output",
+        type=Path,
+        default=None,
+        help="Optional path to write formatted output (used for html format)",
     )
 
     parser.add_argument(
@@ -166,6 +174,7 @@ def parse_args(argv: Sequence[str]) -> CliOptions:
     options = CliOptions(
         target=namespace.target,
         format=namespace.format,
+        output=namespace.output,
         ruleset=tuple(ruleset_paths),
         no_colors=namespace.no_colors,
         include_binaries=include_binaries,

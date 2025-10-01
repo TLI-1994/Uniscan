@@ -2,9 +2,15 @@ from __future__ import annotations
 
 import json
 import sys
+import re
+from datetime import datetime
+import hashlib
 from pathlib import Path
 from collections import defaultdict
 from typing import Any, Sequence
+
+from importlib import resources as importlib_resources
+from jinja2 import Environment, select_autoescape
 
 from .binaries import BinaryClassifier
 from .cli import CliOptions, parse_args
@@ -26,6 +32,27 @@ _COLORS = {
     "critical": "\x1b[35m",  # magenta
 }
 
+def _load_html_template() -> str:
+    template_resource = importlib_resources.files("usentinel.templates") / "report.html"
+    return template_resource.read_text(encoding="utf-8")
+
+_HTML_ENV = Environment(autoescape=select_autoescape(["html", "xml"]))
+_HTML_TEMPLATE_OBJ = _HTML_ENV.from_string(_load_html_template())
+
+
+def _generate_report_filename(report: ScanReport, when: datetime) -> str:
+    project_name = _slugify(report.target.name or "project")
+    timestamp = when.strftime("%Y%m%d-%H%M%S")
+    digest_source = f"{report.target}|{len(report.findings)}|{report.summary.get('findings', {}).get('total', len(report.findings))}|{when.timestamp()}"
+    digest = hashlib.sha256(digest_source.encode("utf-8")).hexdigest()[:8]
+    return f"usentinel-report-{project_name}-{timestamp}-{digest}.html"
+
+
+def _slugify(value: str) -> str:
+    normalized = value.strip().lower()
+    normalized = re.sub(r"[^a-z0-9]+", "-", normalized)
+    normalized = normalized.strip("-")
+    return normalized or "project"
 
 def main(argv: list[str] | None = None) -> int:
     if argv is None:
@@ -54,6 +81,9 @@ def main(argv: list[str] | None = None) -> int:
 
     if options.format == "json":
         print(_report_to_json(report, options))
+    elif options.format == "html":
+        output_path = _write_html_report(report, options)
+        print(f"HTML report written to {output_path}")
     else:
         print(_report_to_text(report, options))
 
@@ -280,6 +310,128 @@ def _format_grouped_findings(findings: Sequence[Finding], options: CliOptions) -
 
 def _print_error(message: str) -> None:
     print(message, file=sys.stderr)
+
+
+def _write_html_report(report: ScanReport, options: CliOptions) -> Path:
+    html = _report_to_html(report)
+    output_path = _resolve_output_path(report, options)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(html, encoding="utf-8")
+    return output_path
+
+
+def _report_to_html(report: ScanReport) -> str:
+    summary = report.summary.get("findings", {})
+    severities = []
+    for level in ORDERED_SEVERITIES:
+        count = summary.get(level, 0)
+        severities.append(
+            {
+                "label": level.capitalize(),
+                "css_class": f"severity-{level}",
+                "count": count,
+                "has_findings": count > 0,
+            }
+        )
+
+    findings = []
+    for finding in sorted(
+        report.findings,
+        key=lambda f: (
+            severity_sort_key(f.severity),
+            str(f.path),
+            f.line or 0,
+            f.rule_id,
+        ),
+    ):
+        link = _file_uri(finding.path, finding.line)
+        line_display = f" (line {finding.line})" if finding.line else ""
+        findings.append(
+            {
+                "rule_id": finding.rule_id,
+                "severity": finding.severity.upper(),
+                "css_class": finding.severity.lower(),
+                "message": finding.message,
+                "path_display": f"{finding.path}{line_display}",
+                "link": link,
+                "snippet": finding.snippet,
+            }
+        )
+
+    binaries = [
+        {
+            "path": str(binary.path),
+            "kind": binary.kind,
+            "size": binary.size,
+            "magic": binary.magic,
+        }
+        for binary in report.binaries
+    ]
+
+    context = {
+        "target": str(report.target),
+        "generated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "engine": {
+            "name": report.engine.get("name", "unknown"),
+            "fallback_reason": report.engine.get("fallback_reason"),
+        },
+        "findings_total": summary.get("total", len(report.findings)),
+        "severities": severities,
+        "binaries_total": report.summary.get("binaries", len(report.binaries)),
+        "findings": findings,
+        "binaries": binaries,
+    }
+
+    return _HTML_TEMPLATE_OBJ.render(context)
+
+
+def _file_uri(path: Path, line: int | None) -> str | None:
+    try:
+        uri = path.resolve().as_uri()
+    except (OSError, ValueError):
+        return None
+    if line:
+        uri = f"{uri}#L{line}"
+    return uri
+
+
+def _resolve_output_path(report: ScanReport, options: CliOptions) -> Path:
+    timestamp = datetime.now()
+
+    if options.output is None:
+        filename = _generate_report_filename(report, timestamp)
+        candidate = Path.cwd() / filename
+        return _unique_path(candidate)
+
+    base = options.output
+    if not base.is_absolute():
+        base = Path.cwd() / base
+
+    base = base.expanduser().resolve()
+
+    if base.exists() and base.is_dir():
+        filename = _generate_report_filename(report, timestamp)
+        candidate = base / filename
+        return _unique_path(candidate)
+
+    if base.suffix == "":
+        base = base.with_suffix(".html")
+
+    return _unique_path(base)
+
+
+def _unique_path(path: Path) -> Path:
+    candidate = path
+    counter = 1
+    suffix = candidate.suffix or ".html"
+    stem = candidate.stem if candidate.suffix else candidate.name
+    parent = candidate.parent
+
+    while candidate.exists():
+        candidate = parent / f"{stem}-{counter}{suffix}"
+        counter += 1
+
+    return candidate
 
 
 if __name__ == "__main__":

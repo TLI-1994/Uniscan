@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -7,11 +8,23 @@ from pathlib import Path
 import pytest
 
 
-def run_cli(target: Path, *args: str) -> subprocess.CompletedProcess:
+def run_cli(target: Path, *args: str, cwd: Path | None = None) -> subprocess.CompletedProcess:
     command = [sys.executable, "-m", "usentinel.main", str(target), *args]
     env = os.environ.copy()
     env.setdefault("USENTINEL_DISABLE_SEMGREP", "1")
-    return subprocess.run(command, capture_output=True, text=True, env=env)
+    src_path = Path(__file__).resolve().parent.parent / "src"
+    existing_pythonpath = env.get("PYTHONPATH")
+    if existing_pythonpath:
+        env["PYTHONPATH"] = os.pathsep.join([str(src_path), existing_pythonpath])
+    else:
+        env["PYTHONPATH"] = str(src_path)
+    return subprocess.run(
+        command,
+        capture_output=True,
+        text=True,
+        env=env,
+        cwd=str(cwd) if cwd else None,
+    )
 
 
 @pytest.mark.integration
@@ -96,3 +109,71 @@ def test_pretty_output_groups_findings(unity_project):
     assert len(rule_lines) == 1
     # line summary should mention lines
     assert "lines" in rule_lines[0]
+
+
+@pytest.mark.integration
+def test_html_format_writes_report(unity_project, tmp_path):
+    target = unity_project("risky_project")
+    output_path = tmp_path / "report.html"
+
+    result = run_cli(
+        target,
+        "--format",
+        "html",
+        "--output",
+        str(output_path),
+        cwd=tmp_path,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert output_path.exists()
+    assert "HTML report written" in result.stdout
+    assert str(output_path) in result.stdout
+    html = output_path.read_text(encoding="utf-8")
+    assert "Usentinel Scan Report" in html
+    assert "Findings" in html
+
+
+@pytest.mark.integration
+def test_html_format_does_not_overwrite_existing_file(unity_project, tmp_path):
+    target = unity_project("risky_project")
+    existing = tmp_path / "report.html"
+    existing.write_text("old", encoding="utf-8")
+
+    result = run_cli(
+        target,
+        "--format",
+        "html",
+        "--output",
+        str(existing),
+        cwd=tmp_path,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert existing.read_text(encoding="utf-8") == "old"
+    fallback = tmp_path / "report-1.html"
+    assert fallback.exists()
+    assert str(fallback) in result.stdout
+
+
+@pytest.mark.integration
+def test_html_format_generates_timestamped_name(unity_project, tmp_path):
+    target = unity_project("risky_project")
+
+    result = run_cli(
+        target,
+        "--format",
+        "html",
+        cwd=tmp_path,
+    )
+
+    assert result.returncode == 0, result.stderr
+
+    html_files = list(tmp_path.glob("usentinel-report-*.html"))
+    assert len(html_files) == 1
+    generated = html_files[0]
+    pattern = re.compile(
+        r"usentinel-report-risky-project-\d{8}-\d{6}-[0-9a-f]{8}\.html"
+    )
+    assert pattern.fullmatch(generated.name)
+    assert str(generated) in result.stdout
