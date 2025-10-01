@@ -132,6 +132,8 @@ class Scanner:
 
         summary = _summarize(findings, binaries)
         engine_info: dict[str, object] = {"name": "semgrep" if semgrep_used else "heuristic"}
+        if semgrep_used and self._semgrep_runner and self._semgrep_runner.version:
+            engine_info["version"] = self._semgrep_runner.version
         if not semgrep_used and semgrep_error:
             engine_info["fallback_reason"] = semgrep_error
 

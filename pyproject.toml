@@ -32,7 +32,7 @@ classifiers = [
 ]
 
 dependencies = [
-    "semgrep>=1.72.0",
+    "semgrep>=1.72,<=1.97",
     "PyYAML>=6.0",
     "certifi>=2023.0",
     "Jinja2>=3.1",

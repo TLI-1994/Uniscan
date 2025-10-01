@@ -166,7 +166,7 @@
       <h1>Usentinel Scan Report</h1>
       <p class="meta">Target: {{ target }}</p>
       <p class="meta">Generated: {{ generated_at }}</p>
-      <p class="meta">Engine: {{ engine.name }}{% if engine.fallback_reason %} (fallback: {{ engine.fallback_reason }}){% endif %}</p>
+      <p class="meta">Engine: {{ engine.name }}{% if engine.version %} (version {{ engine.version }}){% endif %}{% if engine.fallback_reason %} (fallback: {{ engine.fallback_reason }}){% endif %}</p>
     </header>
 
     <section class="summary">

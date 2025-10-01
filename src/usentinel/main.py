@@ -206,6 +206,7 @@ def _report_to_html(report: ScanReport) -> str:
         "engine": {
             "name": report.engine.get("name", "unknown"),
             "fallback_reason": report.engine.get("fallback_reason"),
+            "version": report.engine.get("version"),
         },
         "findings_total": summary.get("total", len(report.findings)),
         "severities": severities,

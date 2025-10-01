@@ -5,6 +5,7 @@ import json
 import os
 import shutil
 import subprocess
+from functools import lru_cache
 
 import certifi
 from dataclasses import dataclass
@@ -14,6 +15,7 @@ from typing import List, Sequence
 
 _DEFAULT_ENV: dict[str, str] = {
     "SEMGREP_SKIP_UPDATE_CHECK": "1",
+    "SEMGREP_DISABLE_VERSION_CHECK": "1",
     "SEMGREP_SEND_METRICS": "off",
     "SEMGREP_LOG_FILE": "/dev/null",
 }
@@ -44,10 +46,17 @@ class SemgrepMatch:
 class SemgrepRunner:
     """Thin wrapper around the Semgrep CLI."""
 
-    def __init__(self, binary: str, rule_files: Sequence[Path], jobs: int | None = None) -> None:
+    def __init__(
+        self,
+        binary: str,
+        rule_files: Sequence[Path],
+        jobs: int | None = None,
+        version: str | None = None,
+    ) -> None:
         self.binary = binary
         self.rule_files = [Path(path) for path in rule_files]
         self.jobs = jobs
+        self.version = version
 
     @classmethod
     def maybe_create(
@@ -59,7 +68,8 @@ class SemgrepRunner:
         if binary is None:
             return None
         _ensure_semgrep_environment()
-        return cls(binary, rule_files, jobs=jobs)
+        version = _detect_semgrep_version()
+        return cls(binary, rule_files, jobs=jobs, version=version)
 
     def run(self, project_root: Path, targets: Sequence[Path]) -> list[SemgrepMatch]:
         if not targets:
@@ -150,3 +160,14 @@ def _resolve_semgrep_binary() -> str | None:
             return str(override_path)
         return None
     return shutil.which("semgrep")
+
+
+@lru_cache(maxsize=1)
+def _detect_semgrep_version() -> str | None:
+    try:
+        import semgrep  # type: ignore
+    except Exception:  # pragma: no cover - dependency load failure
+        return None
+
+    version = getattr(semgrep, "__VERSION__", None) or getattr(semgrep, "__version__", None)
+    return str(version) if isinstance(version, str) else None
