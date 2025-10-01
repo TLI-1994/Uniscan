@@ -7,252 +7,525 @@
       :root {
         color-scheme: light dark;
         font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        --page-bg: #f5f7fb;
+        --surface-muted: #eef1f6;
+        --surface-raised: #ffffff;
+        --text-primary: #0f172a;
+        --text-secondary: #4d5561;
+        --text-tertiary: #6b7283;
+        --border-subtle: #dce1eb;
+        --shadow-soft: 0 12px 30px rgba(15, 23, 42, 0.08);
+        --shadow-card: 0 8px 24px rgba(15, 23, 42, 0.08);
+        --shadow-card-strong: 0 18px 40px rgba(15, 23, 42, 0.12);
+        --accent: #2563eb;
+        --accent-muted: rgba(37, 99, 235, 0.12);
+        --code-bg: #111827;
+        --code-text: #f8fafc;
+        --code-border: rgba(15, 23, 42, 0.45);
+
+        --severity-critical: #b2255f;
+        --severity-critical-bg: rgba(178, 37, 95, 0.14);
+        --severity-critical-border: rgba(178, 37, 95, 0.28);
+        --severity-high: #d95f02;
+        --severity-high-bg: rgba(217, 95, 2, 0.14);
+        --severity-high-border: rgba(217, 95, 2, 0.28);
+        --severity-medium: #b67d00;
+        --severity-medium-bg: rgba(230, 167, 0, 0.16);
+        --severity-medium-border: rgba(230, 167, 0, 0.32);
+        --severity-low: #1f77b4;
+        --severity-low-bg: rgba(31, 119, 180, 0.14);
+        --severity-low-border: rgba(31, 119, 180, 0.32);
       }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --page-bg: #0b1220;
+          --surface-muted: #1a2538;
+          --surface-raised: #111c32;
+          --text-primary: #e2e8f0;
+          --text-secondary: #c7d2fe;
+          --text-tertiary: #94a3b8;
+          --border-subtle: #1f2a40;
+          --shadow-soft: 0 16px 40px rgba(2, 6, 23, 0.55);
+          --shadow-card: 0 12px 36px rgba(2, 6, 23, 0.6);
+          --shadow-card-strong: 0 16px 44px rgba(2, 6, 23, 0.7);
+          --accent: #60a5fa;
+          --accent-muted: rgba(96, 165, 250, 0.14);
+          --code-bg: #020817;
+          --code-text: #e2e8f0;
+          --code-border: rgba(148, 163, 184, 0.22);
+
+          --severity-critical-bg: rgba(178, 37, 95, 0.28);
+          --severity-critical-border: rgba(178, 37, 95, 0.45);
+          --severity-high-bg: rgba(217, 95, 2, 0.3);
+          --severity-high-border: rgba(217, 95, 2, 0.45);
+          --severity-medium-bg: rgba(230, 167, 0, 0.32);
+          --severity-medium-border: rgba(230, 167, 0, 0.5);
+          --severity-low-bg: rgba(31, 119, 180, 0.28);
+          --severity-low-border: rgba(31, 119, 180, 0.45);
+        }
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
       body {
         margin: 0;
-        padding: 2rem;
-        background: #f8f9fb;
-        color: #1b1d21;
+        background: var(--page-bg);
+        color: var(--text-primary);
       }
+
+      .page {
+        max-width: 1380px;
+        margin: 0 auto;
+        padding: 2.5rem 1.75rem 4rem;
+      }
+
       header {
-        max-width: 960px;
-        margin: 0 auto 2rem;
         text-align: center;
+        margin-bottom: 2.5rem;
       }
+
       h1 {
-        margin: 0 0 0.25rem;
-        font-size: 2rem;
+        margin: 0 0 0.35rem;
+        font-size: 2.25rem;
+        letter-spacing: -0.01em;
       }
+
       h2 {
-        margin-top: 2rem;
-        font-size: 1.4rem;
+        margin: 3rem 0 0.85rem;
+        font-size: 1.5rem;
+        letter-spacing: -0.01em;
       }
+
       .meta {
-        color: #4d5561;
+        color: var(--text-secondary);
         font-size: 0.95rem;
         margin: 0.25rem 0;
       }
+
       .summary {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.75rem;
-        margin: 1.5rem 0;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin: 0 0 2.75rem;
       }
+
       .summary-card {
-        flex: 1 1 140px;
-        min-width: 140px;
-        padding: 1rem;
-        border-radius: 12px;
-        background: white;
-        box-shadow: 0 6px 20px rgba(44, 63, 87, 0.08);
-        border: 1px solid transparent;
+        background: var(--surface-raised);
+        border: 1px solid var(--border-subtle);
+        border-radius: 18px;
+        padding: 1.25rem;
+        box-shadow: var(--shadow-card);
+        transition: transform 120ms ease, box-shadow 120ms ease;
       }
+
       .summary-card .label {
-        font-size: 0.85rem;
-        color: #4d5561;
+        font-size: 0.8rem;
         text-transform: uppercase;
-        letter-spacing: 0.05em;
+        letter-spacing: 0.08em;
+        color: var(--text-tertiary);
       }
+
       .summary-card .value {
-        font-size: 1.75rem;
+        font-size: 2rem;
         font-weight: 600;
-        margin-top: 0.35rem;
+        margin-top: 0.4rem;
       }
+
       .summary-card.highlight {
-        box-shadow: 0 8px 24px rgba(44, 63, 87, 0.12);
+        box-shadow: var(--shadow-card-strong);
+        transform: translateY(-2px);
       }
+
       .summary-card.highlight.severity-critical {
-        background: rgba(178, 37, 95, 0.12);
-        border-color: rgba(178, 37, 95, 0.35);
+        background: var(--severity-critical-bg);
+        border-color: var(--severity-critical-border);
       }
+
       .summary-card.highlight.severity-critical .label,
       .summary-card.highlight.severity-critical .value {
-        color: #b2255f;
+        color: var(--severity-critical);
       }
+
       .summary-card.highlight.severity-high {
-        background: rgba(217, 95, 2, 0.12);
-        border-color: rgba(217, 95, 2, 0.35);
+        background: var(--severity-high-bg);
+        border-color: var(--severity-high-border);
       }
+
       .summary-card.highlight.severity-high .label,
       .summary-card.highlight.severity-high .value {
-        color: #d95f02;
+        color: var(--severity-high);
       }
+
       .summary-card.highlight.severity-medium {
-        background: rgba(230, 167, 0, 0.14);
-        border-color: rgba(230, 167, 0, 0.35);
+        background: var(--severity-medium-bg);
+        border-color: var(--severity-medium-border);
       }
+
       .summary-card.highlight.severity-medium .label,
       .summary-card.highlight.severity-medium .value {
-        color: #b67d00;
+        color: var(--severity-medium);
       }
+
       .summary-card.highlight.severity-low {
-        background: rgba(31, 119, 180, 0.12);
-        border-color: rgba(31, 119, 180, 0.35);
+        background: var(--severity-low-bg);
+        border-color: var(--severity-low-border);
       }
+
       .summary-card.highlight.severity-low .label,
       .summary-card.highlight.severity-low .value {
-        color: #1f77b4;
+        color: var(--severity-low);
       }
+
+      .table-card {
+        background: var(--surface-raised);
+        border: 1px solid var(--border-subtle);
+        border-radius: 18px;
+        box-shadow: var(--shadow-soft);
+        overflow: hidden;
+      }
+
+      .table-wrapper {
+        overflow-x: auto;
+      }
+
       table {
         width: 100%;
+        min-width: 640px;
         border-collapse: collapse;
-        margin-top: 1rem;
-        background: white;
-        border-radius: 12px;
-        overflow: hidden;
-        box-shadow: 0 4px 16px rgba(44, 63, 87, 0.08);
       }
-      th, td {
-        padding: 0.85rem 1rem;
+
+      .findings-table {
+        table-layout: fixed;
+      }
+
+      .findings-table th.col-severity,
+      .findings-table td.col-severity {
+        width: 150px;
+        white-space: nowrap;
+      }
+
+      .findings-table th.col-rule,
+      .findings-table td.col-rule {
+        width: 320px;
+        word-break: break-word;
+      }
+
+      th,
+      td {
+        padding: 0.95rem 1.1rem;
         text-align: left;
-        border-bottom: 1px solid #e4e7ec;
+        border-bottom: 1px solid var(--border-subtle);
         vertical-align: top;
+        font-size: 0.95rem;
       }
+
       th {
-        font-size: 0.85rem;
+        font-size: 0.75rem;
         text-transform: uppercase;
-        letter-spacing: 0.05em;
-        color: #4d5561;
-        background: #f0f2f6;
+        letter-spacing: 0.08em;
+        color: var(--text-tertiary);
+        background: var(--surface-muted);
+        position: sticky;
+        top: 0;
+        z-index: 1;
       }
+
       tbody tr:last-child td {
         border-bottom: none;
       }
+
+      tbody tr:hover {
+        background: var(--accent-muted);
+      }
+
+      td {
+        color: var(--text-primary);
+        word-break: break-word;
+      }
+
       .severity-pill {
-        display: inline-block;
-        padding: 0.35rem 0.75rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.35rem;
+        padding: 0.35rem 0.85rem;
         border-radius: 999px;
         font-weight: 600;
         font-size: 0.75rem;
         text-transform: uppercase;
+        border: 1px solid transparent;
       }
-      .severity-pill.critical { background: rgba(178, 37, 95, 0.12); color: #b2255f; }
-      .severity-pill.high { background: rgba(217, 95, 2, 0.15); color: #d95f02; }
-      .severity-pill.medium { background: rgba(230, 167, 0, 0.15); color: #b67d00; }
-      .severity-pill.low { background: rgba(31, 119, 180, 0.15); color: #1f77b4; }
+
+      .severity-pill.critical {
+        background: var(--severity-critical-bg);
+        color: var(--severity-critical);
+        border-color: var(--severity-critical-border);
+      }
+
+      .severity-pill.high {
+        background: var(--severity-high-bg);
+        color: var(--severity-high);
+        border-color: var(--severity-high-border);
+      }
+
+      .severity-pill.medium {
+        background: var(--severity-medium-bg);
+        color: var(--severity-medium);
+        border-color: var(--severity-medium-border);
+      }
+
+      .severity-pill.low {
+        background: var(--severity-low-bg);
+        color: var(--severity-low);
+        border-color: var(--severity-low-border);
+      }
+
       .finding-message {
         font-weight: 600;
         margin-bottom: 0.35rem;
       }
+
       .finding-meta {
         font-size: 0.9rem;
-        color: #4d5561;
+        color: var(--text-secondary);
       }
+
+      details.code-panel {
+        margin-top: 0.85rem;
+      }
+
+      details.code-panel summary {
+        list-style: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        cursor: pointer;
+        font-weight: 600;
+        color: var(--accent);
+      }
+
+      details.code-panel summary::-webkit-details-marker {
+        display: none;
+      }
+
+      details.code-panel summary::before {
+        content: "+";
+        display: inline-block;
+        width: 1.2rem;
+        height: 1.2rem;
+        border-radius: 50%;
+        border: 1px solid currentColor;
+        text-align: center;
+        line-height: 1.2rem;
+        font-size: 0.8rem;
+        transition: transform 120ms ease;
+      }
+
+      details.code-panel[open] summary::before {
+        content: "-";
+      }
+
+      details.code-panel summary:hover,
+      details.code-panel summary:focus-visible {
+        text-decoration: underline;
+      }
+
       pre {
-        background: #121a27;
-        color: #f5f7fb;
-        padding: 0.75rem 1rem;
+        background: var(--code-bg);
+        color: var(--code-text);
+        padding: 0.9rem 1rem;
         border-radius: 8px;
-        max-height: 180px;
+        max-height: 240px;
         overflow: auto;
-        margin-top: 0.75rem;
-      }
-      a {
-        color: inherit;
-      }
-      footer {
-        margin-top: 3rem;
+        margin: 0.75rem 0 0;
+        border: 1px solid var(--code-border);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
         font-size: 0.85rem;
-        color: #6b7283;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(148, 163, 184, 0.6) transparent;
       }
-      @media (max-width: 768px) {
-        body { padding: 1rem; }
-        table { font-size: 0.95rem; }
+
+      pre::-webkit-scrollbar {
+        width: 9px;
+        height: 9px;
+      }
+
+      pre::-webkit-scrollbar-track {
+        background: transparent;
+        border-radius: 8px;
+      }
+
+      pre::-webkit-scrollbar-thumb {
+        background: rgba(148, 163, 184, 0.6);
+        border-radius: 8px;
+        border: 2px solid var(--code-bg);
+      }
+
+      pre::-webkit-scrollbar-thumb:hover {
+        background: rgba(148, 163, 184, 0.75);
+      }
+
+      a {
+        color: var(--accent);
+        text-decoration: none;
+        font-weight: 500;
+        transition: color 120ms ease, text-decoration-color 120ms ease;
+      }
+
+      a:hover,
+      a:focus-visible {
+        text-decoration: underline;
+      }
+
+      footer {
+        margin: 4rem auto 0;
+        max-width: 1380px;
+        padding: 0 1.75rem 2.5rem;
+        font-size: 0.85rem;
+        color: var(--text-tertiary);
+        text-align: center;
+      }
+
+      @media (max-width: 860px) {
+        .page {
+          padding: 2rem 1.25rem 3rem;
+        }
+
+        h1 {
+          font-size: 2rem;
+        }
+
+        .summary-card {
+          padding: 1.1rem;
+        }
+      }
+
+      @media (max-width: 640px) {
+        .page {
+          padding: 1.75rem 1rem 2.5rem;
+        }
+
+        table {
+          min-width: 100%;
+        }
+
+        th,
+        td {
+          padding: 0.85rem 0.9rem;
+        }
       }
     </style>
   </head>
   <body>
-    <header>
-      <h1>Usentinel Scan Report</h1>
-      <p class="meta">Target: {{ target }}</p>
-      <p class="meta">Generated: {{ generated_at }}</p>
-      <p class="meta">Engine: {{ engine.name }}{% if engine.version %} (version {{ engine.version }}){% endif %}{% if engine.fallback_reason %} (fallback: {{ engine.fallback_reason }}){% endif %}</p>
-    </header>
+    <main class="page">
+      <header>
+        <h1>Usentinel Scan Report</h1>
+        <p class="meta">Target: {{ target }}</p>
+        <p class="meta">Generated: {{ generated_at }}</p>
+        <p class="meta">Engine: {{ engine.name }}{% if engine.version %} (version {{ engine.version }}){% endif %}{% if engine.fallback_reason %} (fallback: {{ engine.fallback_reason }}){% endif %}</p>
+      </header>
 
-    <section class="summary">
-      <div class="summary-card">
-        <div class="label">Total Findings</div>
-        <div class="value">{{ findings_total }}</div>
-      </div>
-      {% for severity in severities %}
-      <div class="summary-card{% if severity.has_findings %} highlight {{ severity.css_class }}{% endif %}">
-        <div class="label">{{ severity.label }}</div>
-        <div class="value">{{ severity.count }}</div>
-      </div>
-      {% endfor %}
-      <div class="summary-card">
-        <div class="label">Native Binaries</div>
-        <div class="value">{{ binaries_total }}</div>
-      </div>
-    </section>
-
-    <section>
-      <h2>Findings</h2>
-      {% if findings %}
-      <table>
-        <thead>
-          <tr>
-            <th>Severity</th>
-            <th>Rule</th>
-            <th>Details</th>
-          </tr>
-        </thead>
-        <tbody>
-        {% for finding in findings %}
-          <tr>
-            <td><span class="severity-pill {{ finding.css_class }}">{{ finding.severity }}</span></td>
-            <td>{{ finding.rule_id }}</td>
-            <td>
-              <div class="finding-message">{{ finding.message }}</div>
-              <div class="finding-meta">
-                {% if finding.link %}
-                  <a href="{{ finding.link }}">{{ finding.path_display }}</a>
-                {% else %}
-                  {{ finding.path_display }}
-                {% endif %}
-              </div>
-              {% if finding.snippet_html %}
-              <pre class="code-snippet">{{ finding.snippet_html }}</pre>
-              {% elif finding.snippet_text %}
-              <pre class="code-snippet">{{ finding.snippet_text }}</pre>
-              {% endif %}
-            </td>
-          </tr>
+      <section class="summary" aria-label="Findings summary">
+        <div class="summary-card">
+          <div class="label">Total Findings</div>
+          <div class="value">{{ findings_total }}</div>
+        </div>
+        {% for severity in severities %}
+        <div class="summary-card{% if severity.has_findings %} highlight {{ severity.css_class }}{% endif %}">
+          <div class="label">{{ severity.label }}</div>
+          <div class="value">{{ severity.count }}</div>
+        </div>
         {% endfor %}
-        </tbody>
-      </table>
-      {% else %}
-      <p>No findings detected.</p>
-      {% endif %}
-    </section>
+        <div class="summary-card">
+          <div class="label">Native Binaries</div>
+          <div class="value">{{ binaries_total }}</div>
+        </div>
+      </section>
 
-    <section>
-      <h2>Native Binaries</h2>
-      {% if binaries %}
-      <table>
-        <thead>
-          <tr>
-            <th>Path</th>
-            <th>Kind</th>
-            <th>Size (bytes)</th>
-            <th>Magic</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for binary in binaries %}
-          <tr>
-            <td>{{ binary.path }}</td>
-            <td>{{ binary.kind }}</td>
-            <td>{{ binary.size }}</td>
-            <td>{{ binary.magic }}</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-      {% else %}
-      <p>No native binaries detected.</p>
-      {% endif %}
-    </section>
+      <section>
+        <h2>Findings</h2>
+        {% if findings %}
+        <div class="table-card">
+          <div class="table-wrapper">
+            <table class="findings-table">
+              <thead>
+                <tr>
+                  <th scope="col" class="col-severity">Severity</th>
+                  <th scope="col" class="col-rule">Rule</th>
+                  <th scope="col">Details</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for finding in findings %}
+                <tr>
+                  <td class="col-severity"><span class="severity-pill {{ finding.css_class }}">{{ finding.severity }}</span></td>
+                  <td class="col-rule">{{ finding.rule_id }}</td>
+                  <td>
+                    <div class="finding-message">{{ finding.message }}</div>
+                    <div class="finding-meta">
+                      {% if finding.link %}
+                        <a href="{{ finding.link }}">{{ finding.path_display }}</a>
+                      {% else %}
+                        {{ finding.path_display }}
+                      {% endif %}
+                    </div>
+                    {% if finding.snippet_html or finding.snippet_text %}
+                    <details class="code-panel">
+                      <summary>View code snippet</summary>
+                      {% if finding.snippet_html %}
+                      <pre class="code-snippet">{{ finding.snippet_html }}</pre>
+                      {% elif finding.snippet_text %}
+                      <pre class="code-snippet">{{ finding.snippet_text }}</pre>
+                      {% endif %}
+                    </details>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        {% else %}
+        <p>No findings detected.</p>
+        {% endif %}
+      </section>
+
+      <section>
+        <h2>Native Binaries</h2>
+        {% if binaries %}
+        <div class="table-card">
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Path</th>
+                  <th scope="col">Kind</th>
+                  <th scope="col">Size (bytes)</th>
+                  <th scope="col">Magic</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for binary in binaries %}
+                <tr>
+                  <td>{{ binary.path }}</td>
+                  <td>{{ binary.kind }}</td>
+                  <td>{{ binary.size }}</td>
+                  <td>{{ binary.magic }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        {% else %}
+        <p>No native binaries detected.</p>
+        {% endif %}
+      </section>
+    </main>
 
     <footer>
       Generated by <a href="https://pypi.org/project/usentinel/" target="_blank" rel="noopener noreferrer">Usentinel</a>.
