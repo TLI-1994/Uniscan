@@ -13,6 +13,7 @@ from importlib import resources as importlib_resources
 from markupsafe import Markup
 from jinja2 import Environment, select_autoescape
 
+from . import __version__
 from .binaries import BinaryClassifier
 from .cli import CliOptions, parse_args
 from .rules import RuleLoadError, load_ruleset, load_semgrep_sources
@@ -215,6 +216,7 @@ def _report_to_html(report: ScanReport) -> str:
     context = {
         "target": str(report.target),
         "generated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "usentinel_version": __version__,
         "engine": {
             "name": report.engine.get("name", "unknown"),
             "fallback_reason": report.engine.get("fallback_reason"),
