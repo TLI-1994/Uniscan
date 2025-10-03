@@ -49,6 +49,8 @@ Progress indicators show automatically when Usentinel runs in an interactive ter
 
 Each run reports which analysis engine was used (`semgrep` when available, otherwise a heuristic fallback) so you can confirm coverage.
 
+> **Windows note:** Usentinel installs Semgrep >=1.132.0 on Windows because earlier releases lacked official support (see [semgrep/semgrep#1330](https://github.com/semgrep/semgrep/issues/1330)). To see code snippets in reports when using the Semgrep engine, run `semgrep login`; otherwise the findings show file paths and line numbers without inline code.
+
 Prefer raw JSON? Swap the format flag:
 
 ```bash

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.1 - 2025-10-02
+### Semgrep Integration
+- Require Semgrep >=1.132.0 on Windows to pick up official CLI builds and document snippet login requirements for those users.
+
 ## 0.3.0 - 2025-10-02
 ### Highlights
 - Added a first-class HTML reporting pipeline with templated layout, severity summaries, expandable snippets, and embedded Usentinel/Semgrep metadata so teams can review findings in a shareable format.
