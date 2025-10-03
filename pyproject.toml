@@ -32,7 +32,8 @@ classifiers = [
 ]
 
 dependencies = [
-    "semgrep>=1.72,<=1.97",
+    "semgrep>=1.72,<=1.97; sys_platform != 'win32'",
+    "semgrep>=1.72; sys_platform == 'win32'",
     "PyYAML>=6.0",
     "certifi>=2023.0",
     "Jinja2>=3.1",
