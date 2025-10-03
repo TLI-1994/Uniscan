@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.3.0 - 2025-10-02
+### Highlights
+- Added a first-class HTML reporting pipeline with templated layout, severity summaries, expandable snippets, and embedded Usentinel/Semgrep metadata so teams can review findings in a shareable format.
+- Bundled syntax highlighting via Pygments and packaged HTML assets, producing polished reports with light/dark mode support and deterministic filenames.
+
+### CLI & UX
+- Simplified output selection to `html` or `raw` (`json` still accepted) and auto-detect interactive terminals to decide when to show progress bars and spinners.
+- Defaulted scans to HTML output, writing reports to unique paths (or a user-specified directory/file) and printing the result location.
+
+### Semgrep Integration
+- Surface the detected Semgrep version in scan metadata and constrain supported releases to the vetted `>=1.72,<=1.97` range.
+- Hardened the Semgrep invocation environment to skip telemetry/update checks consistently.
+
+### Documentation
+- Refreshed the README to describe HTML report generation, clarify binary/output behavior, and refine contributor testing guidance and badge layout.
+
 ## 0.2.0 - 2024-09-29
 ### Highlights
 - Rebranded the project from Uniscan to Usentinel, including package, CLI command, and documentation updates.
